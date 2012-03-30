@@ -1,0 +1,3 @@
+git commit -a -m "message"
+git pull git@github.com:paul1/EMR-DB.git
+git push -u origin master
