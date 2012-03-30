@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE web-app
+  PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+  "http://java.sun.com/dtd/web-app_2_3.dtd">
+<web-app>
+  <servlet>
+    <servlet-name>patients</servlet-name>
+    <servlet-class>PatientServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
+      <servlet-name>doctors</servlet-name>
+      <servlet-class>DoctorServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
+      <servlet-name>admins</servlet-name>
+      <servlet-class>AdminServlet</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>patients</servlet-name>
+    <url-pattern>/patients</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+      <servlet-name>doctors</servlet-name>
+      <url-pattern>/doctors</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+      <servlet-name>admins</servlet-name>
+      <url-pattern>/admins</url-pattern>
+  </servlet-mapping>
+
+</web-app>

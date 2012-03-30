@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">
+<html>
+<style media="screen" type="text/css">
+#container
+{
+	margin: 0 auto;
+	width: 800px;
+	background:#fff;
+}
+
+#header
+{
+	background:#ccc;
+	padding: 20px;
+}
+
+#header h1 { margin: 0; }
+
+#navigation
+{
+	float: left;
+	width: 800px;
+	background:#333;
+}
+
+#navigation ul
+{
+	margin: 0;
+	padding: 0;
+}
+
+#navigation ul li
+{
+	list-style-type: none;
+	display: inline;
+}
+
+#navigation li a
+{
+	display: block;
+	float: left;
+	padding: 5px 10px;
+	color:#fff;
+	text-decoration: none;
+	border-right: 1px solid#fff;
+}
+
+#navigation li a:hover { background:#383; }
+
+#content
+{
+	clear: left;
+	padding: 20px;
+}
+
+#content h2
+{
+	color:#000;
+	font-size: 160%;
+	margin: 0 0 .5em;
+}
+
+#footer
+{
+	background:#ccc;
+	text-align: right;
+	padding: 20px;
+	height: 1%;
+}
+</style>
+
+
+<head> <title> Electronic Medical Record Portal </title>
+<script language="javascript">
+<!--
+lastOpen = null;
+function showhide(divider){
+	if (document.getElementById &&!document.all) {
+		if (lastOpen != null){
+			lastOpen.style.display = 'none';
+		}
+
+		elt = document.getElementById(divider);
+		elt.style.display = 'block';
+		lastOpen = elt;
+	}
+}
+//-->
+</script>
+</head>
+<body>
+
+<FORM METHOD=POST>
+<input type="hidden" name="pid" value="%PATIENT_ID%">
+
+<div id="container">
+	<div id="header">
+		<h1>
+			Electronic Medical Record Portal
+		</h1>
+	</div>
+	<div id="navigation">
+		<ul>
+			<li><a href="index.html">Home</a></li>
+			<li><a href="patients">Patients</a></li>
+			<li><a href="doctors">Doctors</a></li>
+			<li><a href="admins">Admins</a></li>
+		</ul>
+	</div>
+	<div id="content">
+		<h2>
+			Welcome, %PATIENT_NAME%!
+		</h2>
+		<p> Your patient id is %PATIENT_ID%.  <a href="./patients.html">Logout </a></p>
+		</ul><hr>
+
+			<h3> Current Appointments </h3><ul>
+				<table border=1 ; cellpadding=4px>
+					<tr> <td> Date </td> <td> Doctor </td> <td> Location </td> <td> Symptoms </td> <td>Cancel</td></tr>
+					%APPOINTMENT_ROWS%
+				</table>
+
+			%LOCATION_DIVIDERS%
+
+	</ul><hr>
+
+			<h3> Create an Appointment </h3><ul>
+				<u> Symptoms</u>:
+					<table cellpadding=6px>
+						%POSSIBLE_SYMPTOMS%
+					</table>
+					<input type="submit" name="create" value="Request Appointment">
+</ul>
+
+	</div>
+	<div id="footer">
+	</div>
+</div>
+</FORM>
+</body>
+</html>
+
+
+

@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">
+<html>
+<style media="screen" type="text/css">
+#container
+{
+	margin: 0 auto;
+	width: 800px;
+	background:#fff;
+}
+
+#header
+{
+	background:#ccc;
+	padding: 20px;
+}
+
+#header h1 { margin: 0; }
+
+#navigation
+{
+	float: left;
+	width: 800px;
+	background:#333;
+}
+
+#navigation ul
+{
+	margin: 0;
+	padding: 0;
+}
+
+#navigation ul li
+{
+	list-style-type: none;
+	display: inline;
+}
+
+#navigation li a
+{
+	display: block;
+	float: left;
+	padding: 5px 10px;
+	color:#fff;
+	text-decoration: none;
+	border-right: 1px solid#fff;
+}
+
+#navigation li a:hover { background:#383; }
+
+#content
+{
+	clear: left;
+	padding: 20px;
+}
+
+#content h2
+{
+	color:#000;
+	font-size: 160%;
+	margin: 0 0 .5em;
+}
+
+#footer
+{
+	background:#ccc;
+	text-align: right;
+	padding: 20px;
+	height: 1%;
+}
+</style>
+
+
+<head> <title> Electronic Medical Record Portal </title>
+<script language="javascript">
+<!--
+function checkLoginForm(){
+	if (document.getElementById &&!document.all) {
+		if (isNaN(parseInt(document.getElementById('did').value))){
+			document.getElementById('login_error').style.display = 'block';
+			return false;
+		}
+	}
+	return true;
+}
+//-->
+</script>
+</head>
+<body>
+
+
+<div id="container">
+	<div id="header">
+		<h1>
+			Electronic Medical Record Portal
+		</h1>
+	</div>
+	<div id="navigation">
+		<ul>
+			<li><a href="index.html">Home</a></li>
+			<li><a href="patients">Patients</a></li>
+			<li><a href="doctors">Doctors</a></li>
+			<li><a href="admins">Admins</a></li>
+		</ul>
+	</div>
+	<div id="content">
+		<h2>
+			Doctor Portal
+		</h2>
+		<hr>
+		 <h3>Log in  below. </h3><ul>
+		<FORM METHOD=POST onsubmit="return checkLoginForm()">
+			<table>
+				<tr><td> Doctor ID:  </td> <td><input type="text" name="did" id="did" size=10 value=""> </td></tr>
+				<tr><td> Name:  </td> <td><input type="text" name="dname" size=20 value=""> </td></tr>
+				<tr><td> <input type="submit" name="login" value="Login"> </td></tr>
+			</table>
+		</FORM>
+		<div id="login_error" style="display: none;">	<br>
+			<b> <color='red'> <FONT COLOR="#FF0000">You need to input a integer ID to log in.</FONT> </b>
+		</div>
+		</ul>
+	</div>
+	<div id="footer">
+	</div>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+</body>
+</html>
+
+

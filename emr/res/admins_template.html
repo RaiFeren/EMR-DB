@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">
+<html>
+<style media="screen" type="text/css">
+#container
+{
+	margin: 0 auto;
+	width: 800px;
+	background:#fff;
+}
+
+#header
+{
+	background:#ccc;
+	padding: 20px;
+}
+
+#header h1 { margin: 0; }
+
+#navigation
+{
+	float: left;
+	width: 800px;
+	background:#333;
+}
+
+#navigation ul
+{
+	margin: 0;
+	padding: 0;
+}
+
+#navigation ul li
+{
+	list-style-type: none;
+	display: inline;
+}
+
+#navigation li a
+{
+	display: block;
+	float: left;
+	padding: 5px 10px;
+	color:#fff;
+	text-decoration: none;
+	border-right: 1px solid#fff;
+}
+
+#navigation li a:hover { background:#383; }
+
+#content
+{
+	clear: left;
+	padding: 20px;
+}
+
+#content h2
+{
+	color:#000;
+	font-size: 160%;
+	margin: 0 0 .5em;
+}
+
+#footer
+{
+	background:#ccc;
+	text-align: right;
+	padding: 20px;
+	height: 1%;
+}
+</style>
+
+
+<head> <title> Electronic Medical Record Portal </title>
+<script language="javascript">
+<!--
+function checkTreatmentForm(){
+	if (document.getElementById &&!document.all) {
+		document.getElementById('treatment_error').style.display = 'none';
+		document.getElementById('doctor_error').style.display = 'none';
+		document.getElementById('facility_error').style.display = 'none';
+
+		if (document.getElementById('treatname').value == "" || isNaN(parseInt(document.getElementById('treatcost').value))){
+			document.getElementById('treatment_error').style.display = 'block';
+			return false;
+		}
+	}
+	return true;
+}
+
+function checkFacilityForm(){
+	if (document.getElementById &&!document.all) {
+		document.getElementById('treatment_error').style.display = 'none';
+		document.getElementById('doctor_error').style.display = 'none';
+		document.getElementById('facility_error').style.display = 'none';
+
+		if (document.getElementById('facility_name').value == "" || document.getElementById('facility_addr_1').value == ""){
+			document.getElementById('facility_error').style.display = 'block';
+			return false;
+		}
+	}
+	return true;
+}
+
+function checkDoctorForm(){
+	if (document.getElementById &&!document.all) {
+		document.getElementById('treatment_error').style.display = 'none';
+		document.getElementById('doctor_error').style.display = 'none';
+		document.getElementById('facility_error').style.display = 'none';
+
+		if (document.getElementById('doctor_name').value == ""){
+			document.getElementById('doctor_error').style.display = 'block';
+			return false;
+		}
+	}
+	return true;
+}
+//-->
+</script>
+</head>
+<body>
+
+
+<div id="container">
+	<div id="header">
+		<h1>
+			Electronic Medical Record Portal
+		</h1>
+	</div>
+	<div id="navigation">
+		<ul>
+			<li><a href="index.html">Home</a></li>
+			<li><a href="patients">Patients</a></li>
+			<li><a href="doctors">Doctors</a></li>
+			<li><a href="admins">Admins</a></li>
+		</ul>
+	</div>
+	<div id="content">
+		<h2>
+			Admin Portal
+		</h2>
+		<hr>
+			<h3> Add a treatment </h3>
+			<ul>
+			<FORM METHOD=POST onsubmit="return checkTreatmentForm()">
+			<table cellpadding=6px>
+				<tr> <td> Name: </td> <td> <input type="text" name="treatname" id="treatname"> </td> </tr>
+				<tr> <td> Cost ($):  </td> <td><input type="text" name="treatcost" id="treatcost" size=8> </td> </tr>
+				<tr> <td> Info:  </td> <td><input type="text" name="treatinfo" size=50> </td> </tr>
+				<tr> <td>
+				</table>
+				Treats Conditions:
+				<table cellpadding=6px>
+					%CONDITION_LIST%
+				</table>
+			<input type="submit" name="add_treatment" value="Add Treatment">
+				<div id="treatment_error" style="display: none;">	<br>
+					<b> <color='red'> <FONT COLOR="#FF0000">You need at least a name and cost.</FONT> </b>
+				</div>
+			</FORM>
+			</ul><hr>
+
+			<h3> Add a condition </h3><ul>
+				<FORM METHOD=POST>
+				<table cellpadding=6px>
+					<tr> <td> Name: </td> <td> <input type="text" name="condname"> </td> </tr>
+				</table>
+				<ul>
+				<b> Symptom Probablilty (%).</b> Note: Non-number probabilities interpreted as 0.
+					<table cellpadding=3px>
+							%SYMPTOM_LIST%
+					</table>
+				</ul>
+				<input type="submit" name="add_condition" value="Add Condition">
+				</FORM>
+			</ul><hr>
+
+			<h3> Add a facility </h3><ul>
+			<FORM METHOD=POST onsubmit="return checkFacilityForm()">
+			<table cellpadding=6px>
+				<tr> <td> Name: </td> <td> <input type="text" name="facility_name" id="facility_name"> </td> </tr>
+				<tr> <td> Address: </td> <td> <input type="text" name="facility_addr_1" id="facility_addr_1" size=30> </td> </tr>
+				<tr> <td> </td> <td> <input type="text" name="facility_addr_2" id="facility_addr_2" size=30> </td> </tr>
+				</table>
+				<input type="submit" name="add_facility" value="Add Facility">
+				<div id="facility_error" style="display: none;">	<br>
+					<b> <color='red'> <FONT COLOR="#FF0000">You need a name and at least the first address line.</FONT> </b>
+				</div>
+			</FORM>
+			</ul><hr>
+
+			<h3> Add a doctor </h3><ul>
+			<FORM METHOD=POST onsubmit="return checkDoctorForm()">
+			<table cellpadding=6px>
+					<tr> <td> Name: </td> <td> <input type="text" name="doctor_name" id="doctor_name"> </td> </tr>
+					</table>
+					<input type="submit" name="add_doctor" value="Add Doctor">
+					<div id="doctor_error" style="display: none;">	<br>
+						<b> <color='red'> <FONT COLOR="#FF0000">You need a the doctor's name!.</FONT> </b>
+				</div>
+			</FORM>
+			</ul><hr>
+		</FORM>
+	</div>
+	<div id="footer">
+	</div>
+</div>
+
+</body>
+</html>
+
