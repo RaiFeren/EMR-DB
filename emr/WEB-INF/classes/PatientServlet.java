@@ -85,7 +85,9 @@ public class PatientServlet extends HttpServlet {
 			// get name, dob, budget
 			String patientName = request.getParameter("pname2");
 			String dob = request.getParameter("dob");
-			double budget = Double.parseDouble(request.getParameter("budget"));
+			String insurance = request.getParameter("insurance");
+			double value = Double.parseDouble(request.getParameter("value"));
+			double weight = Double.parseDouble(request.getParameter("weight"));
 
 			out.println(generate_patient_page(patientID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
 

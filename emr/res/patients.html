@@ -90,7 +90,7 @@ function checkRegisterForm(){
 		document.getElementById('login_error').style.display = 'none';
 		document.getElementById('register_error').style.display = 'none';
 
-		if (document.getElementById('pname2').value == "" || document.getElementById('dob').value == "" || isNaN(parseInt(document.getElementById('budget').value))){
+		if (document.getElementById('pname2').value == "" || document.getElementById('dob').value == "" || document.getElementById('insurance').value == "" || isNaN(parseInt(document.getElementById('weight').value))){
 			document.getElementById('register_error').style.display = 'block';
 			return false;
 		}
@@ -140,12 +140,13 @@ function checkRegisterForm(){
 			<table>
 				<tr><td> Name:  </td> <td><input type="text" name="pname2" id="pname2" size=20 value=""> </td></tr>
 				<tr><td> Date of Birth:  </td> <td><input type="text" name="dob" id="dob" size=10 value=""> </td></tr>
-				<tr><td> Monthly Budget($):  </td> <td><input type="text" name="budget" id="budget" size=10 value=""> </td></tr>
+				<tr><td> Weight (lbs):  </td> <td><input type="text" name="weight" id="weight" size=10 value=""> </td></tr>
+				<tr><td> Insurance Provider:  </td> <td><input type="text" name="insurance" id="insurance" size=10 value=""> </td></tr>
 				<tr><td> <input type="submit" name="register" value="Register"> </td></tr>
 			</table>
 		</FORM>
 		<div id="register_error" style="display: none;">	<br>
-			<b> <color='red'> <FONT COLOR="#FF0000">You need to fill out all three fields correctly to register.</FONT> </b>
+			<b> <color='red'> <FONT COLOR="#FF0000">You need to fill out all 5 fields correctly to register.</FONT> </b>
 		</div>
 </ul>
 

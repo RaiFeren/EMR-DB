@@ -146,6 +146,7 @@ function checkDoctorForm(){
 				<tr> <td> Name: </td> <td> <input type="text" name="treatname" id="treatname"> </td> </tr>
 				<tr> <td> Cost ($):  </td> <td><input type="text" name="treatcost" id="treatcost" size=8> </td> </tr>
 				<tr> <td> Info:  </td> <td><input type="text" name="treatinfo" size=50> </td> </tr>
+				<tr> <td> Side Effects:  </td> <td><input type="text" name="sideeffects" size=50> </td> </tr>
 				<tr> <td>
 				</table>
 				Treats Conditions:
@@ -192,6 +193,7 @@ function checkDoctorForm(){
 			<FORM METHOD=POST onsubmit="return checkDoctorForm()">
 			<table cellpadding=6px>
 					<tr> <td> Name: </td> <td> <input type="text" name="doctor_name" id="doctor_name"> </td> </tr>
+					<tr> <td> Degree: </td> <td> <input type="text" name="degree" id="degree"> </td> </tr>
 					</table>
 					<input type="submit" name="add_doctor" value="Add Doctor">
 					<div id="doctor_error" style="display: none;">	<br>
