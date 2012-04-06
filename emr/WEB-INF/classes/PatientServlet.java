@@ -10,6 +10,7 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 // displays page and performs various requests about electronics products
 public class PatientServlet extends HttpServlet {
@@ -72,7 +73,20 @@ public class PatientServlet extends HttpServlet {
 			// get login ID
 			int ID = Integer.parseInt(request.getParameter("pid"));
 
-			out.println(generate_patient_page(ID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
+			// get records from database or else reject input
+			ArrayList<ArrayList<Object>> result = DB.executeQuery("SELECT name FROM Patients WHERE pid=" + ID + ";", 1);
+			if (result.isEmpty()){
+				// send the PATIENT_MAIN page back
+				String errorPage = readFileAsString(PATIENT_MAIN);
+				errorPage = errorPage.replace("<div id=\"bad_id\" style=\"display: none;\">", "<div id=\"bad_id\" style=\"display: block;\">");
+				errorPage = errorPage.replace("%BAD_ID%", ID + "");
+        		out.println(errorPage);
+        		return;
+			}
+			else{
+				patientName = result.get(0).get(0).toString();
+				out.println(generate_patient_page(ID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
+			}
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
@@ -86,8 +100,25 @@ public class PatientServlet extends HttpServlet {
 			String patientName = request.getParameter("pname2");
 			String dob = request.getParameter("dob");
 			String insurance = request.getParameter("insurance");
-			double value = Double.parseDouble(request.getParameter("value"));
 			double weight = Double.parseDouble(request.getParameter("weight"));
+			int patientID = 0;
+
+			// create a new pid for this patient by finding maximum of all current IDs
+			Object result = DB.executeQuery("SELECT MAX(pid) FROM Patients", 1).get(0).get(0);
+			if (result == null)
+				patientID = 1;
+			else
+				patientID = Integer.parseInt(result.toString()) + 1;
+
+			// insert patient into database
+			DB.executeUpdate("INSERT INTO Patients VALUES(" + patientID + ", \"" + patientName + "\", \"" + dob  + "\", " + weight + ");");
+
+			// insert information into insurance and uses table
+
+			// will not remove existing row by primary key constraint
+			DB.executeUpdate("INSERT INTO Insurance VALUES(\"" + insurance + "\", 0);");
+			DB.executeUpdate("UPDATE Insurance SET num_users = num_users + 1 WHERE name LIKE \"" + insurance + "\";");
+			DB.executeUpdate("INSERT INTO Uses VALUES(" + patientID + ", \"" + insurance + "\");");
 
 			out.println(generate_patient_page(patientID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
 
@@ -185,35 +216,6 @@ public class PatientServlet extends HttpServlet {
 
     }
 
-    // Displays a table row for each item
-    private void printResultSet(PrintWriter out, String query, int num_cols) {
 
-        Connection connection = null;
-
-        try {
-
-            // Establish network connection to database
-            connection = DB.openConnection();
-
-            // Create a statement for executing the query
-            Statement statement = connection.createStatement();
-
-            // Send query to database and receive result
-            ResultSet resultSet = statement.executeQuery(query);
-
-            // Compose the rows.
-            while (resultSet.next()) {
-                out.println("<TR>");
-                for (int i = 1; i < num_cols+1; i++)
-	                out.println("<TD>" + resultSet.getObject(i) + "</TD>");
-                out.println("</TR>");
-            }
-			connection.close();
-        } catch (SQLException sqle) {
-            throw new RuntimeException("Error accessing database: " + sqle);
-		}
-
-
-    }
 
 }

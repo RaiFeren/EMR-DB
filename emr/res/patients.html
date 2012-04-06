@@ -76,6 +76,7 @@ function checkLoginForm(){
 	if (document.getElementById &&!document.all) {
 		document.getElementById('login_error').style.display = 'none';
 		document.getElementById('register_error').style.display = 'none';
+		document.getElementById('bad_id').style.display = 'none';
 
 		if (isNaN(parseInt(document.getElementById('pid').value))){
 			document.getElementById('login_error').style.display = 'block';
@@ -89,6 +90,7 @@ function checkRegisterForm(){
 	if (document.getElementById &&!document.all) {
 		document.getElementById('login_error').style.display = 'none';
 		document.getElementById('register_error').style.display = 'none';
+		document.getElementById('bad_id').style.display = 'none';
 
 		if (document.getElementById('pname2').value == "" || document.getElementById('dob').value == "" || document.getElementById('insurance').value == "" || isNaN(parseInt(document.getElementById('weight').value))){
 			document.getElementById('register_error').style.display = 'block';
@@ -131,6 +133,9 @@ function checkRegisterForm(){
 				<tr><td><input type="submit" name="login" id="login" value="Login"> </td></tr>
 			</table>
 		</FORM>
+		<div id="bad_id" style="display: none;">	<br>
+			<b> <color='red'> <FONT COLOR="#FF0000">Your id, %BAD_ID%, was not found in the database. Please register instead.</FONT> </b>
+		</div>
 		<div id="login_error" style="display: none;">	<br>
 			<b> <color='red'> <FONT COLOR="#FF0000">You need to input a integer ID to log in.</FONT> </b>
 		</div>
