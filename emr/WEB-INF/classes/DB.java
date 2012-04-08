@@ -23,6 +23,8 @@ public class DB {
 		}
     }
 
+// will want to optmize connecting/disconnecting later
+
     // execute a query, which returns the result set
 	public static ArrayList<ArrayList<Object>> executeQuery(String query, int num_cols) {
 

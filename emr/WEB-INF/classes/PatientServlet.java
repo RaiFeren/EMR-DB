@@ -19,6 +19,7 @@ public class PatientServlet extends HttpServlet {
 	public static final String PATIENT_TEMPLATE = "../webapps/emr/res/patient_template.html";
 	public static final String PATIENT_MAIN = "../webapps/emr/res/patients.html";
 
+/*
 	// just for testing
 	int patientID = 67;
 	String patientName = "Maurice";
@@ -32,6 +33,7 @@ public class PatientServlet extends HttpServlet {
 	String[] loc_addr_2 = { "San Antonio, TX", "Boulder, CO" };
 	int[] sym_id = { 6, 1, 3, 4, 7, 68, 23 };
 	String[] symptomNames = { "nausea", "vomiting", "headache", "runny nose", "sore muscles", "itchy eyes", "rashes" };
+	*/
 
 
 	// respond to a GET request by just writing the page to the output
@@ -71,21 +73,20 @@ public class PatientServlet extends HttpServlet {
     public void doLogin(HttpServletRequest request, PrintWriter out){
 		try{
 			// get login ID
-			int ID = Integer.parseInt(request.getParameter("pid"));
+			int patientID = Integer.parseInt(request.getParameter("pid"));
 
 			// get records from database or else reject input
-			ArrayList<ArrayList<Object>> result = DB.executeQuery("SELECT name FROM Patients WHERE pid=" + ID + ";", 1);
+			ArrayList<ArrayList<Object>> result = DB.executeQuery("SELECT name FROM Patients WHERE pid=" + patientID + ";", 1);
 			if (result.isEmpty()){
 				// send the PATIENT_MAIN page back
 				String errorPage = readFileAsString(PATIENT_MAIN);
 				errorPage = errorPage.replace("<div id=\"bad_id\" style=\"display: none;\">", "<div id=\"bad_id\" style=\"display: block;\">");
-				errorPage = errorPage.replace("%BAD_ID%", ID + "");
+				errorPage = errorPage.replace("%BAD_ID%", patientID + "");
         		out.println(errorPage);
         		return;
 			}
 			else{
-				patientName = result.get(0).get(0).toString();
-				out.println(generate_patient_page(ID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
+				out.println(generate_patient_page(patientID));
 			}
 
 		} catch (java.lang.Exception ex2){
@@ -120,7 +121,7 @@ public class PatientServlet extends HttpServlet {
 			DB.executeUpdate("UPDATE Insurance SET num_users = num_users + 1 WHERE name LIKE \"" + insurance + "\";");
 			DB.executeUpdate("INSERT INTO Uses VALUES(" + patientID + ", \"" + insurance + "\");");
 
-			out.println(generate_patient_page(patientID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
+			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
@@ -130,9 +131,36 @@ public class PatientServlet extends HttpServlet {
 	// create an appointment by id (note that patient id is in hidden html field)
 	public void createAppointment(HttpServletRequest request, PrintWriter out){
 		try{
-			// get symptoms and decide on condition
+			// get patient ID
+			int patientID = Integer.parseInt(request.getParameter("pid"));
 
-			out.println(generate_patient_page(patientID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
+			// get symptoms and decide on condition
+			ArrayList<ArrayList<Object>> possibleSymptoms = DB.executeQuery("SELECT sid FROM Symptoms", 1);
+			ArrayList<Integer> symptoms = new ArrayList<Integer>();
+			for (int i = 0; i < possibleSymptoms.size(); i++)
+				if (request.getParameter("sym_" + possibleSymptoms.get(i).get(0)) != null)
+					symptoms.add((Integer) possibleSymptoms.get(i).get(0));
+
+			// create a new appointment
+			// get a new appointment id
+			Integer aid = 1;
+			Object result = DB.executeQuery("SELECT MAX(aid) FROM Appointments", 1).get(0).get(0);
+			if (result != null)
+				aid = Integer.parseInt(result.toString()) + 1;
+			Integer did = 1;
+			Integer fid = 1;
+			String date = "NEW APPT";
+
+			// add appointment
+			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", \""+date+"\");");
+
+			// add all symptoms (will need to turn off autocommit)
+			// get symptoms and decide on condition
+			for (int i = 0; i < symptoms.size(); i++)
+				DB.executeUpdate("INSERT INTO SymptomList VALUES("+aid+", "+symptoms.get(i)+");");
+
+
+			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
@@ -142,42 +170,84 @@ public class PatientServlet extends HttpServlet {
 	// cancel an appointment by id (note that patient id is in hidden html field)
 	public void cancelAppointment(HttpServletRequest request, PrintWriter out){
 		try{
-			// cancel appointment
-			out.println(generate_patient_page(patientID, patientName, symptoms, date, doctor, loc_id, loc_name, appt_id, loc_addr_1, loc_addr_2, sym_id, symptomNames));
+			// get patient ID
+			int patientID = Integer.parseInt(request.getParameter("pid"));
+			int apptID = -1;
+
+			// get a list of all appointment ids for this person
+			ArrayList<ArrayList<Object>> appts = DB.executeQuery("SELECT A.aid FROM Appointments A WHERE A.pid = " + patientID + ";", 1);
+
+			// check all buttons with ids "cancel_i", where i is aid
+			for (int i = 0; i < appts.size(); i++)
+				if (request.getParameter("cancel_" + appts.get(i).get(0)) != null){
+					apptID = (Integer) appts.get(i).get(0);
+					break;
+				}
+
+			if (apptID != -1)
+				DB.executeUpdate("DELETE FROM Appointments WHERE aid = " + apptID + ";");
+
+			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
-	private String generate_patient_page(int patientID, String patientName, String[][] symptoms, String[] date, String[] doctor, int[] loc_id, String[] loc_name, int[] appt_id, String[] loc_addr_1, String[] loc_addr_2, int[] sym_id, String[] symptomNames) throws IOException {
+	private String generate_patient_page(int patientID) throws IOException {
 
 	        String html = readFileAsString(PATIENT_TEMPLATE);
 	        String appointmentRows = "";
-	        // concatenated into comma-separated lists
-	        String[] symptomStrings = new String[symptoms.length];
+	        String prescriptionRows = "";
 	        String allowedSymptomRows = "<tr>";
 	        String locationDividers = "";
 
-	        for (int row = 0; row < symptoms.length; row++) {
+	        // get patient name
+	        String patientName = (String) DB.executeQuery("SELECT name FROM Patients WHERE pid = " + patientID + ";", 1).get(0).get(0);
+
+			// get all appointment information from database (except symptoms, which will get later)
+			ArrayList<ArrayList<Object>> appointmentInfo = DB.executeQuery("SELECT A.date, D.name, F.fid, F.name, A.aid FROM Patients P, Appointments A, Doctors D, Facilities F WHERE P.pid=" + patientID + " and A.pid = P.pid and A.did = D.did and A.fid = F.fid;", 5);
+
+			// concatenated into comma-separated lists
+	        String[] symptomStrings = new String[appointmentInfo.size()];
+	        for (int row = 0; row < appointmentInfo.size(); row++) {
+				// get symptom info for this appointment
+				ArrayList<ArrayList<Object>> sympList = DB.executeQuery("SELECT S.name FROM Symptoms S, SymptomList L WHERE L.aid = " + appointmentInfo.get(row).get(4) + " and L.sid = S.sid;", 1);
 	            symptomStrings[row] = "";
-	            for (int i = 0; i < symptoms[row].length; i++) {
+	            for (int i = 0; i < sympList.size(); i++) {
 	                if (i != 0)
 	                    symptomStrings[row] += ", ";
-	                symptomStrings[row] += symptoms[row][i];
+	                symptomStrings[row] += (String) sympList.get(i).get(0);
 	            }
 	        }
 
-	        for (int appt = 0; appt < appt_id.length; appt++) {
-	            appointmentRows += String.format("<tr>" + "<td> %s </td>" + "<td> %s </td>" + "<td> <a href=\"#\" onclick=\"showhide('location_%d');\">%s</a> </td>" + "<td> %s </td>" + "<td> <input type=\"submit\" name=\"cancel_%d\" value=\"Cancel\"> </td> </tr>\n", date[appt], doctor[appt], loc_id[appt], loc_name[appt], symptomStrings[appt], appt_id[appt]);
+			// print appointment info
+	        for (int appt = 0; appt < appointmentInfo.size(); appt++) {
+	            appointmentRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> <a href=\"#\" onclick=\"showhide('location_%d');\">%s</a> </td> <td> %s </td> <td> <input type=\"submit\" name=\"cancel_%d\" value=\"Cancel\"> </td> </tr>\n",
+	            (String) appointmentInfo.get(appt).get(0), (String) appointmentInfo.get(appt).get(1), (Integer) appointmentInfo.get(appt).get(2),
+	            (String) appointmentInfo.get(appt).get(3), symptomStrings[appt], (Integer) appointmentInfo.get(appt).get(4));
+	            //date[appt], doctor[appt], loc_id[appt], loc_name[appt], symptomStrings[appt], appt_id[appt]);
 	        }
 
-	        for (int loc = 0; loc < loc_id.length; loc++)
-	            locationDividers += String.format("<div id=\"location_%d\" style=\"display: none;\">" + "	<br>\n" + "	<b> %s </b>\n" + "	<ul>\n" + "		%s <br>\n" + "		%s\n" + "	</ul>\n" + "</div>\n\n", loc_id[loc], loc_name[loc], loc_addr_1[loc], loc_addr_2[loc]);
+	        // get all prescriptions
+	        ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT T.name, D.name, T.cost, R.howlong FROM Treatments T, TakesPrescriptions R, Patients P, Doctors D WHERE P.pid = " + patientID + " and R.pid = P.pid and T.tid = R.tid and D.did = R.did;", 4);
+			for (int i = 0; i < prescriptions.size(); i++) {
+				prescriptionRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> %s </td> <td> %s </td> </tr>\n",
+				(String) prescriptions.get(i).get(0), (String) prescriptions.get(i).get(1), (Double) prescriptions.get(i).get(2), (String) prescriptions.get(i).get(3));
+	        }
 
-	        for (int i = 0; i < sym_id.length; i++) {
-	            allowedSymptomRows += String.format("\t<td> <input type=\"checkbox\" name=\"sym_%d\"> %s </td>", sym_id[i], symptomNames[i]);
-	            if (i > 0 && i < sym_id.length - 1 && i % 4 == 3)
+			// get all location addresses for dividers
+			ArrayList<ArrayList<Object>> facilityAddrs = DB.executeQuery("SELECT F.fid, F.name, F.addr1, F.addr2 FROM Facilities F", 4);
+	        for (int loc = 0; loc < facilityAddrs.size(); loc++)
+	            locationDividers += String.format("<div id=\"location_%d\" style=\"display: none;\"> <br>\n <b> %s </b>\n <ul>\n %s <br>\n %s\n </ul>\n </div>\n\n",
+	            (Integer) facilityAddrs.get(loc).get(0), (String) facilityAddrs.get(loc).get(1), (String) facilityAddrs.get(loc).get(2), (String) facilityAddrs.get(loc).get(3));
+	            //loc_id[loc], loc_name[loc], loc_addr_1[loc], loc_addr_2[loc]);
+
+			// get all allowed symptoms from database
+			ArrayList<ArrayList<Object>> symptomList = DB.executeQuery("SELECT sid, name FROM Symptoms", 2);
+	        for (int i = 0; i < symptomList.size(); i++) {
+	            allowedSymptomRows += String.format("\t<td> <input type=\"checkbox\" name=\"sym_%d\"> %s </td>", (Integer) symptomList.get(i).get(0), (String) symptomList.get(i).get(1));
+	            if (i > 0 && i < symptomList.size() - 1 && i % 4 == 3)
 	                allowedSymptomRows += "</tr>\n<tr>";
 	        }
 	        allowedSymptomRows += "</tr>";
@@ -187,6 +257,7 @@ public class PatientServlet extends HttpServlet {
 	        html = html.replace("%APPOINTMENT_ROWS%", appointmentRows);
 	        html = html.replace("%LOCATION_DIVIDERS%", locationDividers);
 	        html = html.replace("%POSSIBLE_SYMPTOMS%", allowedSymptomRows);
+	        html = html.replace("%PRESCRIPTION_ROWS%", prescriptionRows);
 
 	        return html;
     }
