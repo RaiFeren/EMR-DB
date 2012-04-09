@@ -75,7 +75,7 @@
 <!--
 function checkLoginForm(){
 	if (document.getElementById &&!document.all) {
-		if (isNaN(parseInt(document.getElementById('did').value))){
+		if (isNaN(Number(document.getElementById('did').value))){
 			document.getElementById('login_error').style.display = 'block';
 			return false;
 		}

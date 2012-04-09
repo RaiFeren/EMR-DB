@@ -51,6 +51,9 @@ public class PatientServlet extends HttpServlet {
 	// respond to a post by interpreting form information and printing requested output
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+		// Set up the response
+        response.setContentType("text/html");
+
         // Begin composing the response
         PrintWriter out = response.getWriter();
 
@@ -63,9 +66,6 @@ public class PatientServlet extends HttpServlet {
 			createAppointment(request, out);
 		else 													// canceling any appointment
 			cancelAppointment(request, out);
-
-        // Set up the response
-        response.setContentType("text/html");
     }
 
 
@@ -158,7 +158,6 @@ public class PatientServlet extends HttpServlet {
 			// get symptoms and decide on condition
 			for (int i = 0; i < symptoms.size(); i++)
 				DB.executeUpdate("INSERT INTO SymptomList VALUES("+aid+", "+symptoms.get(i)+");");
-
 
 			out.println(generate_patient_page(patientID));
 

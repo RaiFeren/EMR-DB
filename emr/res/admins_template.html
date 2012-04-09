@@ -79,18 +79,25 @@ function checkTreatmentForm(){
 		document.getElementById('doctor_error').style.display = 'none';
 		document.getElementById('facility_error').style.display = 'none';
 
-		if (document.getElementById('treatname').value == "" || isNaN(parseInt(document.getElementById('treatcost').value))){
+		var treatments = document.getElementById("treat_select")
+		var chosenoption = treatments.options[treatments.selectedIndex]
+
+		// make sure either a treatment was selected or a new one was created
+		var a = Number(document.getElementById('treatcost').value)
+		if (document.getElementById('condname').value != "" && document.getElementById('probability').value != "" && !isNaN(Number(document.getElementById('probability').value)) && (chosenoption.value != "new" || (document.getElementById('treatname').value != "" && document.getElementById('treatcost').value != "" && !isNaN(Number(document.getElementById('treatcost').value))))){
+			return true;
+		} else {
 			document.getElementById('treatment_error').style.display = 'block';
 			return false;
 		}
 	}
-	return true;
+	return false;
 }
 
 function checkFacilityForm(){
 	if (document.getElementById &&!document.all) {
-		document.getElementById('treatment_error').style.display = 'none';
 		document.getElementById('doctor_error').style.display = 'none';
+		document.getElementById('treatment_error').style.display = 'none';
 		document.getElementById('facility_error').style.display = 'none';
 
 		if (document.getElementById('facility_name').value == "" || document.getElementById('facility_addr_1').value == ""){
@@ -103,8 +110,8 @@ function checkFacilityForm(){
 
 function checkDoctorForm(){
 	if (document.getElementById &&!document.all) {
-		document.getElementById('treatment_error').style.display = 'none';
 		document.getElementById('doctor_error').style.display = 'none';
+		document.getElementById('treatment_error').style.display = 'none';
 		document.getElementById('facility_error').style.display = 'none';
 
 		if (document.getElementById('doctor_name').value == ""){
@@ -113,6 +120,20 @@ function checkDoctorForm(){
 		}
 	}
 	return true;
+
+}
+
+// when the select-option for treatment changes
+
+function checkNewSelected(){
+	var treatments = document.getElementById("treat_select")
+	var chosenoption = treatments.options[treatments.selectedIndex]
+	if (chosenoption.value != "new"){
+		// hide optional
+		document.getElementById('new_treatment').style.display = 'none';
+	} else {
+		document.getElementById('new_treatment').style.display = 'block';
+	}
 }
 //-->
 </script>
@@ -139,40 +160,42 @@ function checkDoctorForm(){
 			Admin Portal
 		</h2>
 		<hr>
-			<h3> Add a treatment </h3>
-			<ul>
-			<FORM METHOD=POST onsubmit="return checkTreatmentForm()">
-			<table cellpadding=6px>
-				<tr> <td> Name: </td> <td> <input type="text" name="treatname" id="treatname"> </td> </tr>
-				<tr> <td> Cost ($):  </td> <td><input type="text" name="treatcost" id="treatcost" size=8> </td> </tr>
-				<tr> <td> Info:  </td> <td><input type="text" name="treatinfo" size=50> </td> </tr>
-				<tr> <td> Side Effects:  </td> <td><input type="text" name="sideeffects" size=50> </td> </tr>
-				<tr> <td>
-				</table>
-				Treats Conditions:
+			<h3> Add a condition and treatment </h3><ul>
+				<FORM METHOD=POST onsubmit="return checkTreatmentForm()">
 				<table cellpadding=6px>
-					%CONDITION_LIST%
-				</table>
-			<input type="submit" name="add_treatment" value="Add Treatment">
-				<div id="treatment_error" style="display: none;">	<br>
-					<b> <color='red'> <FONT COLOR="#FF0000">You need at least a name and cost.</FONT> </b>
-				</div>
-			</FORM>
-			</ul><hr>
-
-			<h3> Add a condition </h3><ul>
-				<FORM METHOD=POST>
-				<table cellpadding=6px>
-					<tr> <td> Name: </td> <td> <input type="text" name="condname"> </td> </tr>
+					<tr> <td> Condition: </td> <td> <input type="text" name="condname" id="condname"> </td> </tr>
+					<tr> <td> Info: </td> <td> <input type="text" name="condinfo" id="condinfo"> </td> </tr>
+					<tr> <td> Frequency (%): </td> <td> <input type="text" name="probability" id="probability"> </td> </tr>
 				</table>
 				<ul>
-				<b> Symptom Probablilty (%).</b> Note: Non-number probabilities interpreted as 0.
+				<b> Symptom Probablilty (%).</b>
 					<table cellpadding=3px>
 							%SYMPTOM_LIST%
 					</table>
 				</ul>
-				<input type="submit" name="add_condition" value="Add Condition">
+
+					<h4> Treatment </h4>
+						<ul> <select id="treat_select" name="treat_select" onchange="checkNewSelected()">
+						  <option value="0" name="0">New...</option>
+						  %TREATMENT_ROWS%
+						</select> </ul>
+
+
+						<div id="new_treatment" style="display: block;">	<br> <ul>
+						<table cellpadding=6px>
+						<tr> <td> Treatment: </td> <td> <input type="text" name="treatname" id="treatname"> </td> </tr>
+						<tr> <td> Cost ($):  </td> <td><input type="text" name="treatcost" id="treatcost" size=8> </td> </tr>
+						<tr> <td> Info:  </td> <td><input type="text" name="treatinfo" size=50> </td> </tr>
+						<tr> <td> Side Effects:  </td> <td><input type="text" name="sideeffects" size=50> </td> </tr>
+						</table>
+					</div>
+				<br>
+
+				<input type="submit" name="add_condition" value="Add Condition/Treatment">
 				</FORM>
+				<div id="treatment_error" style="display: none;">	<br>
+						<b> <color='red'> <FONT COLOR="#FF0000">You need to fill out the form correctly.</FONT> </b>
+				</div>
 			</ul><hr>
 
 			<h3> Add a facility </h3><ul>

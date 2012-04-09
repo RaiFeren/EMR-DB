@@ -78,7 +78,7 @@ function checkLoginForm(){
 		document.getElementById('register_error').style.display = 'none';
 		document.getElementById('bad_id').style.display = 'none';
 
-		if (isNaN(parseInt(document.getElementById('pid').value))){
+		if (isNaN(Number(document.getElementById('pid').value))){
 			document.getElementById('login_error').style.display = 'block';
 			return false;
 		}
@@ -92,7 +92,7 @@ function checkRegisterForm(){
 		document.getElementById('register_error').style.display = 'none';
 		document.getElementById('bad_id').style.display = 'none';
 
-		if (document.getElementById('pname2').value == "" || document.getElementById('dob').value == "" || document.getElementById('insurance').value == "" || isNaN(parseInt(document.getElementById('weight').value))){
+		if (document.getElementById('pname2').value == "" || document.getElementById('dob').value == "" || document.getElementById('insurance').value == "" || isNaN(Number(document.getElementById('weight').value))){
 			document.getElementById('register_error').style.display = 'block';
 			return false;
 		}

@@ -10,6 +10,7 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 // displays page and performs various requests about electronics products
 public class AdminServlet extends HttpServlet {
@@ -56,46 +57,73 @@ public class AdminServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
 		// send the adminstrative page back
-        out.println(generate_admin_page(cond_id, condName, sym_id, symptomNames));
+        out.println(generate_admin_page());
     }
 
 	// respond to a post by interpreting form information and printing requested output
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		 // Set up the response
+        response.setContentType("text/html");
 
         // Begin composing the response
         PrintWriter out = response.getWriter();
 
 		// see which form was submitted based on state of submit button
-		if(request.getParameter("add_treatment") != null)				// add a treatment
-			addTreatment(request, out);
-		else if(request.getParameter("add_condition") != null)			// add a condition
+		if(request.getParameter("add_condition") != null)			// add a condition
 			addCondition(request, out);
 		else if(request.getParameter("add_facility") != null)			// add a facility
 			addFacility(request, out);
 		else if(request.getParameter("add_doctor") != null)				// add a doctor
 			addDoctor(request, out);
-
-        // Set up the response
-        response.setContentType("text/html");
     }
 
-
-	// add a treatment
-    public void addTreatment(HttpServletRequest request, PrintWriter out){
-		try{
-
-			out.println(generate_admin_page(cond_id, condName, sym_id, symptomNames));
-
-		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
-		}
-	}
 
 	// add a condition
     public void addCondition(HttpServletRequest request, PrintWriter out){
 		try{
+			String treat_name = request.getParameter("treatname");
+			// get selected treatment id
+			int treat_id = Integer.parseInt(request.getParameter("treat_select"));
 
-			out.println(generate_admin_page(cond_id, condName, sym_id, symptomNames));
+			// if a new treatment is being added
+			if (treat_id == 0) {
+				Double cost = Double.parseDouble(request.getParameter("treatcost"));
+				String info = request.getParameter("treatinfo");
+				String sideeffects = request.getParameter("sideeffects");
+				String maker="NULL";
+				String fid = "NULL";
+
+				// add new treatment
+				Object result = DB.executeQuery("SELECT MAX(tid) FROM Treatments", 1).get(0).get(0);
+				if (result != null)
+					treat_id = Integer.parseInt(result.toString()) + 1;
+
+				DB.executeUpdate("INSERT INTO Treatments VALUES(" + treat_id + ", \"" + treat_name + "\", " + cost  + ", \"" + info + "\", \"" + maker + "\", "+ fid + ", \""+ sideeffects + "\");");
+
+			}
+
+			// create a new cid for this facility by finding maximum of all current IDs
+			int cid = 1;
+			Object result = DB.executeQuery("SELECT MAX(cid) FROM ConditionsTreats", 1).get(0).get(0);
+			if (result != null)
+				 cid = Integer.parseInt(result.toString()) + 1;
+
+			String cond_name = request.getParameter("condname");
+			String cond_info= request.getParameter("condinfo");
+			Double probability = Double.parseDouble(request.getParameter("probability"))/100;
+
+			// create a new condition
+			DB.executeUpdate("INSERT INTO ConditionsTreats VALUES(" + cid + ", \"" + cond_name + "\", \"" + cond_info + "\", " + probability + ", "+ treat_id + ");");
+
+			// add all the symptom probabilities
+			ArrayList<ArrayList<Object>> possibleSymptoms = DB.executeQuery("SELECT sid FROM Symptoms", 1);
+			for (int i = 0; i < possibleSymptoms.size(); i++){
+				int symID = (Integer) possibleSymptoms.get(i).get(0);
+				double probSymptom = Double.parseDouble(request.getParameter("prob_" + symID));
+				DB.executeUpdate("INSERT INTO Implies VALUES("+symID+", "+cid+"," +probSymptom+");");
+			}
+
+			out.println(generate_admin_page());
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
@@ -105,8 +133,20 @@ public class AdminServlet extends HttpServlet {
 	// add a facility
     public void addFacility(HttpServletRequest request, PrintWriter out){
 		try{
+			// create a new fid for this facility by finding maximum of all current IDs
+			int facilityID = 1;
+			Object result = DB.executeQuery("SELECT MAX(fid) FROM Facilities", 1).get(0).get(0);
+			if (result != null)
+				facilityID = Integer.parseInt(result.toString()) + 1;
 
-			out.println(generate_admin_page(cond_id, condName, sym_id, symptomNames));
+			String name = request.getParameter("facility_name");
+			String addr1 = request.getParameter("facility_addr_1");
+			String addr2 = request.getParameter("facility_addr_2");
+
+			// insert facility into database
+			DB.executeUpdate("INSERT INTO Facilities VALUES(" + facilityID + ", \"" + name + "\", \"" + addr1  + "\", \"" + addr2 + "\");");
+
+			out.println(generate_admin_page());
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
@@ -116,8 +156,19 @@ public class AdminServlet extends HttpServlet {
 	// add a doctor
     public void addDoctor(HttpServletRequest request, PrintWriter out){
 		try{
+			// create a new did for this doctor by finding maximum of all current IDs
+			int did = 1;
+			Object result = DB.executeQuery("SELECT MAX(did) FROM Doctors", 1).get(0).get(0);
+			if (result != null)
+				did = Integer.parseInt(result.toString()) + 1;
 
-			out.println(generate_admin_page(cond_id, condName, sym_id, symptomNames));
+			String name = request.getParameter("doctor_name");
+			String degree = request.getParameter("degree");
+
+			// insert facility into database
+			DB.executeUpdate("INSERT INTO Doctors VALUES(" + did + ", \"" + name + "\", \"" + degree + "\");");
+
+			out.println(generate_admin_page());
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
@@ -125,28 +176,40 @@ public class AdminServlet extends HttpServlet {
 	}
 
 
-	public String generate_admin_page(int[] cond_id, String[] condName, int[] sym_id, String[] symName) throws IOException {
+	public String generate_admin_page() throws IOException {
 
 		String html = readFileAsString(ADMIN_TEMPLATE);
 		String symptomProbabilities = "";
-		String treatsConditionsList = "<tr>";
+		String treatmentRows = "";
 
-		for (int i = 0; i < sym_id.length; i++) {
-			symptomProbabilities += String.format("<tr> <td> %s </td><td><input type=\"text\" name=\"prob_%d\" size=1> </td> </tr>\n", symName[i], sym_id[i]);
+		// get all symptoms from database
+		ArrayList<ArrayList<Object>> possibleSymptoms = DB.executeQuery("SELECT name, sid FROM Symptoms", 2);
+		for (int i = 0; i < possibleSymptoms.size(); i++) {
+			// javascript will ensure a number is typed in the boxes
+			symptomProbabilities += String.format("<tr> <td> %s </td><td><input type=\"text\" name=\"prob_%d\" size=1 value = \"0.0\" onblur=\"if (isNaN(Number(this.value))) this.value = '0.0'\"> </td> </tr>\n", (String) possibleSymptoms.get(i).get(0), (Integer) possibleSymptoms.get(i).get(1));
 		}
 
-		for (int i = 0; i < cond_id.length; i++) {
-			treatsConditionsList += String.format("<td> <input type=\"checkbox\" name=\"cond_%d\"> %s </td>", cond_id[i], condName[i]);
-			if (i > 0 && i < cond_id.length - 1 && i % 4 == 3)
-				treatsConditionsList += "</tr>\n<tr>";
+		// get all treatments from database
+		ArrayList<ArrayList<Object>> treatments = DB.executeQuery("SELECT tid, name FROM Treatments", 2);
+		for (int i = 0; i < treatments.size(); i++) {
+			treatmentRows += "<option value=\"" + treatments.get(i).get(0) + "\">"+(String) treatments.get(i).get(1)+"</option>\n";
 		}
-		treatsConditionsList += "</tr>";
 
-		html = html.replace("%SYMPTOM_LIST%", symptomProbabilities + "");
-		html = html.replace("%CONDITION_LIST%", treatsConditionsList);
+		html = html.replace("%SYMPTOM_LIST%", symptomProbabilities);
+		html = html.replace("%TREATMENT_ROWS%", treatmentRows);
 
 		return html;
     }
+
+    /* OLD ADD TREATMENT SECTION
+    for (int i = 0; i < cond_id.length; i++) {
+				treatsConditionsList += String.format("<td> <input type=\"checkbox\" name=\"cond_%d\"> %s </td>", cond_id[i], condName[i]);
+				if (i > 0 && i < cond_id.length - 1 && i % 4 == 3)
+					treatsConditionsList += "</tr>\n<tr>";
+			}
+		treatsConditionsList += "</tr>";
+		html = html.replace("%CONDITION_LIST%", treatsConditionsList);
+		*/
 
 
 
@@ -170,37 +233,6 @@ public class AdminServlet extends HttpServlet {
 			return e.getMessage() + "\n" + System.getProperty("user.dir");
 		}
 		return new String(buffer);
-
-    }
-
-    // Displays a table row for each item
-    private void printResultSet(PrintWriter out, String query, int num_cols) {
-
-        Connection connection = null;
-
-        try {
-
-            // Establish network connection to database
-            connection = DB.openConnection();
-
-            // Create a statement for executing the query
-            Statement statement = connection.createStatement();
-
-            // Send query to database and receive result
-            ResultSet resultSet = statement.executeQuery(query);
-
-            // Compose the rows.
-            while (resultSet.next()) {
-                out.println("<TR>");
-                for (int i = 1; i < num_cols+1; i++)
-	                out.println("<TD>" + resultSet.getObject(i) + "</TD>");
-                out.println("</TR>");
-            }
-			connection.close();
-        } catch (SQLException sqle) {
-            throw new RuntimeException("Error accessing database: " + sqle);
-		}
-
 
     }
 
