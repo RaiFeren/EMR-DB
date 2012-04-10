@@ -18,36 +18,6 @@ public class AdminServlet extends HttpServlet {
 	// main page (not template page) for patient portal
 	public static final String ADMIN_TEMPLATE = "../webapps/emr/res/admins_template.html";
 
-	// just for testing
-	int patientID = 89;
-	String patientName = "Maurice";
-	String[][] symptoms = { { "cold", "drowsy" }, { "none" } };
-	String[] date = { "05/31/12", "09/45/23" };
-	String[] doctor = { "Dr. One", "Dr. Two" };
-	int[] loc_id = { 5, 8 };
-	String[] loc_name = { "Meadows Branch", "Eisenhower" };
-	int[] appt_id = { 7, 12 };
-	String[] loc_addr_1 = { "45 Utica", "9824 Linden Park Dr." };
-	String[] loc_addr_2 = { "San Antonio, TX", "Boulder, CO" };
-	int[] sym_id = { 6, 1, 3, 4, 7, 68, 23 };
-	String[] symptomNames = { "nausea", "vomiting", "headache", "runny nose", "sore muscles", "itchy eyes", "rashes" };
-
-	int doctorID = 293;
-	String doctorName = "Dr. Leadville";
-	String[] patient = {"Watson", "Clarke"};
-	String[] condition = {"Flu", "Cholera"};
-	String[] treatment = {"Rest", "Death"};
-	int[] all_loc_id = {5,8,7,9};
-	String[] allLocations = {"Loc 5", "Loc 8", "Loc 7", "Loc 9"};
-	boolean[] locationAvailable = {true, true, false, true};
-	int[] treat_id = {1,2,3,4,5,6,7};
-	String[] treatName = {"treat 1", "treat 2", "treat 3", "treat 4", "treat 5", "treat 6", "treat 7"};
-	boolean[] treatKnown = {false, false, true, true, false, false, true};
-
-	int[] cond_id = {1,2,3,4,5,6};
-	String[] condName = {"Diptheria", "Cholera", "Giardia", "Flu", "Tiredness", "Exhaustion"};
-
-
 	// respond to a GET request by just writing the page to the output
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Set up the response
@@ -84,6 +54,8 @@ public class AdminServlet extends HttpServlet {
 			String treat_name = request.getParameter("treatname");
 			// get selected treatment id
 			int treat_id = Integer.parseInt(request.getParameter("treat_select"));
+
+			DB.beginTransaction();
 
 			// if a new treatment is being added
 			if (treat_id == 0) {
@@ -123,6 +95,7 @@ public class AdminServlet extends HttpServlet {
 				DB.executeUpdate("INSERT INTO Implies VALUES("+symID+", "+cid+"," +probSymptom+");");
 			}
 
+			DB.endTransaction();
 			out.println(generate_admin_page());
 
 		} catch (java.lang.Exception ex2){
@@ -135,6 +108,7 @@ public class AdminServlet extends HttpServlet {
 		try{
 			// create a new fid for this facility by finding maximum of all current IDs
 			int facilityID = 1;
+			DB.beginTransaction();
 			Object result = DB.executeQuery("SELECT MAX(fid) FROM Facilities", 1).get(0).get(0);
 			if (result != null)
 				facilityID = Integer.parseInt(result.toString()) + 1;
@@ -145,6 +119,7 @@ public class AdminServlet extends HttpServlet {
 
 			// insert facility into database
 			DB.executeUpdate("INSERT INTO Facilities VALUES(" + facilityID + ", \"" + name + "\", \"" + addr1  + "\", \"" + addr2 + "\");");
+			DB.endTransaction();
 
 			out.println(generate_admin_page());
 
@@ -158,6 +133,7 @@ public class AdminServlet extends HttpServlet {
 		try{
 			// create a new did for this doctor by finding maximum of all current IDs
 			int did = 1;
+			DB.beginTransaction();
 			Object result = DB.executeQuery("SELECT MAX(did) FROM Doctors", 1).get(0).get(0);
 			if (result != null)
 				did = Integer.parseInt(result.toString()) + 1;
@@ -167,6 +143,7 @@ public class AdminServlet extends HttpServlet {
 
 			// insert facility into database
 			DB.executeUpdate("INSERT INTO Doctors VALUES(" + did + ", \"" + name + "\", \"" + degree + "\");");
+			DB.endTransaction();
 
 			out.println(generate_admin_page());
 
@@ -176,11 +153,14 @@ public class AdminServlet extends HttpServlet {
 	}
 
 
+	// generate admin web page to return
 	public String generate_admin_page() throws IOException {
 
 		String html = readFileAsString(ADMIN_TEMPLATE);
 		String symptomProbabilities = "";
 		String treatmentRows = "";
+
+		DB.beginTransaction();
 
 		// get all symptoms from database
 		ArrayList<ArrayList<Object>> possibleSymptoms = DB.executeQuery("SELECT name, sid FROM Symptoms", 2);
@@ -191,6 +171,8 @@ public class AdminServlet extends HttpServlet {
 
 		// get all treatments from database
 		ArrayList<ArrayList<Object>> treatments = DB.executeQuery("SELECT tid, name FROM Treatments", 2);
+		DB.endTransaction();
+
 		for (int i = 0; i < treatments.size(); i++) {
 			treatmentRows += "<option value=\"" + treatments.get(i).get(0) + "\">"+(String) treatments.get(i).get(1)+"</option>\n";
 		}

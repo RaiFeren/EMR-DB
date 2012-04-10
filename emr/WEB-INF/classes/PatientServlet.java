@@ -19,22 +19,6 @@ public class PatientServlet extends HttpServlet {
 	public static final String PATIENT_TEMPLATE = "../webapps/emr/res/patient_template.html";
 	public static final String PATIENT_MAIN = "../webapps/emr/res/patients.html";
 
-/*
-	// just for testing
-	int patientID = 67;
-	String patientName = "Maurice";
-	String[][] symptoms = { { "cold", "drowsy" }, { "none" } };
-	String[] date = { "05/31/12", "09/45/23" };
-	String[] doctor = { "Dr. One", "Dr. Two" };
-	int[] loc_id = { 5, 8 };
-	String[] loc_name = { "Meadows Branch", "Eisenhower" };
-	int[] appt_id = { 7, 12 };
-	String[] loc_addr_1 = { "45 Utica", "9824 Linden Park Dr." };
-	String[] loc_addr_2 = { "San Antonio, TX", "Boulder, CO" };
-	int[] sym_id = { 6, 1, 3, 4, 7, 68, 23 };
-	String[] symptomNames = { "nausea", "vomiting", "headache", "runny nose", "sore muscles", "itchy eyes", "rashes" };
-	*/
-
 
 	// respond to a GET request by just writing the page to the output
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -105,6 +89,7 @@ public class PatientServlet extends HttpServlet {
 			int patientID = 0;
 
 			// create a new pid for this patient by finding maximum of all current IDs
+			DB.beginTransaction();
 			Object result = DB.executeQuery("SELECT MAX(pid) FROM Patients", 1).get(0).get(0);
 			if (result == null)
 				patientID = 1;
@@ -115,11 +100,11 @@ public class PatientServlet extends HttpServlet {
 			DB.executeUpdate("INSERT INTO Patients VALUES(" + patientID + ", \"" + patientName + "\", \"" + dob  + "\", " + weight + ");");
 
 			// insert information into insurance and uses table
-
-			// will not remove existing row by primary key constraint
+			// will not insert duplicate row by primary key constraint
 			DB.executeUpdate("INSERT INTO Insurance VALUES(\"" + insurance + "\", 0);");
 			DB.executeUpdate("UPDATE Insurance SET num_users = num_users + 1 WHERE name LIKE \"" + insurance + "\";");
 			DB.executeUpdate("INSERT INTO Uses VALUES(" + patientID + ", \"" + insurance + "\");");
+			DB.endTransaction();
 
 			out.println(generate_patient_page(patientID));
 
@@ -135,6 +120,7 @@ public class PatientServlet extends HttpServlet {
 			int patientID = Integer.parseInt(request.getParameter("pid"));
 
 			// get symptoms and decide on condition
+			DB.beginTransaction();
 			ArrayList<ArrayList<Object>> possibleSymptoms = DB.executeQuery("SELECT sid FROM Symptoms", 1);
 			ArrayList<Integer> symptoms = new ArrayList<Integer>();
 			for (int i = 0; i < possibleSymptoms.size(); i++)
@@ -154,11 +140,12 @@ public class PatientServlet extends HttpServlet {
 			// add appointment
 			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", \""+date+"\");");
 
-			// add all symptoms (will need to turn off autocommit)
+			// add all symptoms (will need to turn off autocommit to make efficient)
 			// get symptoms and decide on condition
 			for (int i = 0; i < symptoms.size(); i++)
 				DB.executeUpdate("INSERT INTO SymptomList VALUES("+aid+", "+symptoms.get(i)+");");
 
+			DB.endTransaction();
 			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
@@ -174,6 +161,7 @@ public class PatientServlet extends HttpServlet {
 			int apptID = -1;
 
 			// get a list of all appointment ids for this person
+			DB.beginTransaction();
 			ArrayList<ArrayList<Object>> appts = DB.executeQuery("SELECT A.aid FROM Appointments A WHERE A.pid = " + patientID + ";", 1);
 
 			// check all buttons with ids "cancel_i", where i is aid
@@ -185,7 +173,7 @@ public class PatientServlet extends HttpServlet {
 
 			if (apptID != -1)
 				DB.executeUpdate("DELETE FROM Appointments WHERE aid = " + apptID + ";");
-
+			DB.endTransaction();
 			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
@@ -193,6 +181,7 @@ public class PatientServlet extends HttpServlet {
 		}
 	}
 
+	// generate a page with a patient's info, where the patient is identified by his/her id
 	private String generate_patient_page(int patientID) throws IOException {
 
 	        String html = readFileAsString(PATIENT_TEMPLATE);
@@ -200,6 +189,9 @@ public class PatientServlet extends HttpServlet {
 	        String prescriptionRows = "";
 	        String allowedSymptomRows = "<tr>";
 	        String locationDividers = "";
+
+			// begin a transaction
+			DB.beginTransaction();
 
 	        // get patient name
 	        String patientName = (String) DB.executeQuery("SELECT name FROM Patients WHERE pid = " + patientID + ";", 1).get(0).get(0);
@@ -250,6 +242,7 @@ public class PatientServlet extends HttpServlet {
 	                allowedSymptomRows += "</tr>\n<tr>";
 	        }
 	        allowedSymptomRows += "</tr>";
+	        DB.endTransaction();
 
 	        html = html.replace("%PATIENT_ID%", patientID + "");
 	        html = html.replace("%PATIENT_NAME%", patientName);

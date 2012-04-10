@@ -12,7 +12,7 @@ USE emr;
 
 CREATE TABLE Patients(pid INT PRIMARY KEY, name CHAR(30) NOT NULL, dob CHAR(30), weight REAL);
 
-CREATE TABLE Insurance(name CHAR(30) PRIMARY KEY, num_users INT);
+CREATE TABLE Insurance(name CHAR(30), num_users INT);
 
 CREATE TABLE Doctors(did INT PRIMARY KEY, name CHAR(30) NOT NULL, degree CHAR(10));
 
@@ -34,7 +34,7 @@ CREATE TABLE SymptomList(	aid INT,
 				FOREIGN KEY (aid) REFERENCES Appointments (aid) ON DELETE CASCADE, 
 				FOREIGN KEY (sid) REFERENCES Symptoms (sid) ON DELETE CASCADE);
 
-CREATE TABLE Treatments(tid INT PRIMARY KEY, name CHAR(30) NOT NULL, cost REAL, info CHAR(30), maker CHAR(10), fid INT, sideeffects CHAR(30));
+CREATE TABLE Treatments(tid INT PRIMARY KEY, name CHAR(30) NOT NULL, cost REAL, info CHAR(100), maker CHAR(10), fid INT, sideeffects CHAR(30));
 
 CREATE TABLE TakesPrescriptions(pid INT, 
 				tid INT, 
@@ -46,7 +46,7 @@ CREATE TABLE TakesPrescriptions(pid INT,
 
 CREATE TABLE ConditionsTreats(	cid INT PRIMARY KEY, 
 				name CHAR(30) NOT NULL, 
-				info CHAR(30), 
+				info CHAR(100), 
 				probability REAL, 
 				tid INT,
 				FOREIGN KEY (tid) REFERENCES Treatments (tid));
@@ -68,10 +68,10 @@ CREATE TABLE Implies(	sid INT,
 			FOREIGN KEY (sid) REFERENCES Symptoms (sid), 
 			FOREIGN KEY (cid) REFERENCES ConditionsTreats (cid));
 			
+-- FOREIGN KEY (name) REFERENCES Insurance (name)
 CREATE TABLE Uses(	pid INT, 
 			name CHAR(30),
-			FOREIGN KEY (pid) REFERENCES Patients (pid), 
-			FOREIGN KEY (name) REFERENCES Insurance (name));
+			FOREIGN KEY (pid) REFERENCES Patients (pid));
 
 -- trigger to change insurance uses number on delete/insert from uses
 
@@ -88,6 +88,7 @@ insert into facilities values(1, "Meadows Branch", "2983 Lincoln Ave.", "Redwood
 insert into Appointments values(1, 1, 1, 1, "1/1/12");
 
 insert into treatments(tid, name, cost) values (1, "Sleep", 0);
+insert into treatments(tid, name, cost) values (2, "Oral Rehydration Salts", 7.75);
 insert into takesprescriptions values(1, 1, 1, "long time");
 
 insert into symptoms values(1, "Nausea", "");
@@ -104,6 +105,7 @@ insert into SymptomList values(1, 6);
 insert into worksin values(1, 1);
 
 insert into conditionstreats values(1, "Allergies", "", 0.6, 1);
+insert into conditionstreats values(2, "Cholera", "from contaminated food/water", 0.003, 2);
 
 insert into knows values(1, 1);
 
