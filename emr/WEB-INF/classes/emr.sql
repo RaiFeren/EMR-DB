@@ -18,22 +18,6 @@ CREATE TABLE Doctors(did INT PRIMARY KEY, name CHAR(30) NOT NULL, degree CHAR(10
 
 CREATE TABLE Facilities(fid INT PRIMARY KEY, name CHAR(30) NOT NULL, addr1 CHAR(30) NOT NULL, addr2 CHAR(30));
 
-CREATE TABLE Appointments(	aid INT PRIMARY KEY, 
-				pid INT, 
-				did INT, 
-				fid INT, 
-				date CHAR(11) NOT NULL,
-				FOREIGN KEY (pid) REFERENCES Patients (pid),
-				FOREIGN KEY (did) REFERENCES Doctors (did),
-				FOREIGN KEY (fid) REFERENCES Facilities (fid));
-
-CREATE TABLE Symptoms(sid INT PRIMARY KEY, name CHAR(30) NOT NULL, descr CHAR(30));
-
-CREATE TABLE SymptomList(	aid INT, 
-				sid INT, 
-				FOREIGN KEY (aid) REFERENCES Appointments (aid) ON DELETE CASCADE, 
-				FOREIGN KEY (sid) REFERENCES Symptoms (sid) ON DELETE CASCADE);
-
 CREATE TABLE Treatments(tid INT PRIMARY KEY, name CHAR(30) NOT NULL, cost REAL, info CHAR(100), maker CHAR(10), fid INT, sideeffects CHAR(30));
 
 CREATE TABLE TakesPrescriptions(pid INT, 
@@ -50,6 +34,25 @@ CREATE TABLE ConditionsTreats(	cid INT PRIMARY KEY,
 				probability REAL, 
 				tid INT,
 				FOREIGN KEY (tid) REFERENCES Treatments (tid));
+
+CREATE TABLE Appointments(	aid INT PRIMARY KEY, 
+				pid INT, 
+				did INT, 
+				fid INT, 
+				cid INT,
+				date CHAR(11) NOT NULL,
+				FOREIGN KEY (pid) REFERENCES Patients (pid),
+				FOREIGN KEY (did) REFERENCES Doctors (did),
+				FOREIGN KEY (fid) REFERENCES Facilities (fid),
+				FOREIGN KEY (cid) REFERENCES ConditionsTreats (cid));
+
+CREATE TABLE Symptoms(sid INT PRIMARY KEY, name CHAR(30) NOT NULL, descr CHAR(30));
+
+CREATE TABLE SymptomList(	aid INT, 
+				sid INT, 
+				FOREIGN KEY (aid) REFERENCES Appointments (aid) ON DELETE CASCADE, 
+				FOREIGN KEY (sid) REFERENCES Symptoms (sid) ON DELETE CASCADE);
+
 
 CREATE TABLE WorksIn(	did INT, 
 			fid INT, 
@@ -85,10 +88,15 @@ insert into doctors values(1, "Dr. Nobody", "DDS");
 
 insert into facilities values(1, "Meadows Branch", "2983 Lincoln Ave.", "Redwood, CA 97876");
 
-insert into Appointments values(1, 1, 1, 1, "1/1/12");
 
 insert into treatments(tid, name, cost) values (1, "Sleep", 0);
 insert into treatments(tid, name, cost) values (2, "Oral Rehydration Salts", 7.75);
+
+insert into conditionstreats values(1, "Allergies", "", 0.6, 1);
+insert into conditionstreats values(2, "Cholera", "from contaminated food/water", 0.003, 2);
+
+insert into Appointments values(1, 1, 1, 1, 1, "1/1/12");
+
 insert into takesprescriptions values(1, 1, 1, "long time");
 
 insert into symptoms values(1, "Nausea", "");
@@ -104,8 +112,6 @@ insert into SymptomList values(1, 6);
 
 insert into worksin values(1, 1);
 
-insert into conditionstreats values(1, "Allergies", "", 0.6, 1);
-insert into conditionstreats values(2, "Cholera", "from contaminated food/water", 0.003, 2);
 
 insert into knows values(1, 1);
 

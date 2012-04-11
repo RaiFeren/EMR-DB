@@ -135,10 +135,11 @@ public class PatientServlet extends HttpServlet {
 				aid = Integer.parseInt(result.toString()) + 1;
 			Integer did = 1;
 			Integer fid = 1;
+			Integer cid = 1;		// assume for now that it exists
 			String date = "NEW APPT";
 
 			// add appointment
-			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", \""+date+"\");");
+			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + cid + ", \""+date+"\");");
 
 			// add all symptoms (will need to turn off autocommit to make efficient)
 			// get symptoms and decide on condition
