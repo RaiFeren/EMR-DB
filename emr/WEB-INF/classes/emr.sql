@@ -61,9 +61,9 @@ CREATE TABLE WorksIn(	did INT,
 			
 			
 CREATE TABLE Knows(	did INT, 
-			cid INT, 
+			tid INT, 
 			FOREIGN KEY (did) REFERENCES Doctors (did), 
-			FOREIGN KEY (cid) REFERENCES ConditionsTreats (cid));
+			FOREIGN KEY (tid) REFERENCES Treatments (tid));
 			
 CREATE TABLE Implies(	sid INT, 
 			cid INT, 

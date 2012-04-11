@@ -198,7 +198,7 @@ public class PatientServlet extends HttpServlet {
 	        String patientName = (String) DB.executeQuery("SELECT name FROM Patients WHERE pid = " + patientID + ";", 1).get(0).get(0);
 
 			// get all appointment information from database (except symptoms, which will get later)
-			ArrayList<ArrayList<Object>> appointmentInfo = DB.executeQuery("SELECT A.date, D.name, F.fid, F.name, A.aid FROM Patients P, Appointments A, Doctors D, Facilities F WHERE P.pid=" + patientID + " and A.pid = P.pid and A.did = D.did and A.fid = F.fid;", 5);
+			ArrayList<ArrayList<Object>> appointmentInfo = DB.executeQuery("SELECT A.date, D.name, F.fid, F.name, A.aid FROM Appointments A, Doctors D, Facilities F WHERE A.pid=" + patientID + " and A.did = D.did and A.fid = F.fid;", 5);
 
 			// concatenated into comma-separated lists
 	        String[] symptomStrings = new String[appointmentInfo.size()];

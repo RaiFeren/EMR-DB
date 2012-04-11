@@ -10,6 +10,7 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 // displays page and performs various requests about electronics products
 public class DoctorServlet extends HttpServlet {
@@ -17,36 +18,6 @@ public class DoctorServlet extends HttpServlet {
 	// main page (not template page) for patient portal
 	public static final String DOCTOR_TEMPLATE = "../webapps/emr/res/doctor_template.html";
 	public static final String DOCTOR_MAIN = "../webapps/emr/res/doctors.html";
-
-	// just for testing
-	int patientID = 89;
-	String patientName = "Maurice";
-	String[][] symptoms = { { "cold", "drowsy" }, { "none" } };
-	String[] date = { "05/31/12", "09/45/23" };
-	String[] doctor = { "Dr. One", "Dr. Two" };
-	int[] loc_id = { 5, 8 };
-	String[] loc_name = { "Meadows Branch", "Eisenhower" };
-	int[] appt_id = { 7, 12 };
-	String[] loc_addr_1 = { "45 Utica", "9824 Linden Park Dr." };
-	String[] loc_addr_2 = { "San Antonio, TX", "Boulder, CO" };
-	int[] sym_id = { 6, 1, 3, 4, 7, 68, 23 };
-	String[] symptomNames = { "nausea", "vomiting", "headache", "runny nose", "sore muscles", "itchy eyes", "rashes" };
-
-	int doctorID = 293;
-	String doctorName = "Dr. Leadville";
-	String[] patient = {"Watson", "Clarke"};
-	String[] condition = {"Flu", "Cholera"};
-	String[] treatment = {"Rest", "Death"};
-	int[] all_loc_id = {5,8,7,9};
-	String[] allLocations = {"Loc 5", "Loc 8", "Loc 7", "Loc 9"};
-	boolean[] locationAvailable = {true, true, false, true};
-	int[] treat_id = {1,2,3,4,5,6,7};
-	String[] treatName = {"treat 1", "treat 2", "treat 3", "treat 4", "treat 5", "treat 6", "treat 7"};
-	boolean[] treatKnown = {false, false, true, true, false, false, true};
-
-	int[] cond_id = {1,2,3,4,5,6};
-	String[] condName = {"Diptheria", "Cholera", "Giardia", "Flu", "Tiredness", "Exhaustion"};
-
 
 	// respond to a GET request by just writing the page to the output
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -62,6 +33,8 @@ public class DoctorServlet extends HttpServlet {
 
 	// respond to a post by interpreting form information and printing requested output
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	    // Set up the response
+        response.setContentType("text/html");
 
         // Begin composing the response
         PrintWriter out = response.getWriter();
@@ -71,9 +44,6 @@ public class DoctorServlet extends HttpServlet {
 			doLogin(request, out);
 		else if(request.getParameter("update") != null)			// update treatments known
 			updateTreatmentsKnown(request, out);
-
-        // Set up the response
-        response.setContentType("text/html");
     }
 
 
@@ -83,63 +53,148 @@ public class DoctorServlet extends HttpServlet {
 			// get login ID
 			int doctorID = Integer.parseInt(request.getParameter("did"));
 
-			out.println(generate_doctor_page(doctorID, doctorName, symptoms, date, patient, loc_id, loc_name, condition, treatment, appt_id, loc_addr_1, loc_addr_2,
-                all_loc_id, allLocations, locationAvailable, treat_id, treatName, treatKnown));
+			// get records from database or else reject input
+			ArrayList<ArrayList<Object>> result = DB.executeQuery("SELECT name FROM Doctors WHERE did=" + doctorID + ";", 1);
+			if (result.isEmpty()){
+				// send the DOCTOR_MAIN page back
+				String errorPage = readFileAsString(DOCTOR_MAIN);
+				errorPage = errorPage.replace("<div id=\"bad_id\" style=\"display: none;\">", "<div id=\"bad_id\" style=\"display: block;\">");
+				errorPage = errorPage.replace("%BAD_ID%", doctorID + "");
+				out.println(errorPage);
+				return;
+			}
+			else{
+				out.println(generate_doctor_page(doctorID));
+			}
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
-	// update list of treatments known
+	// update list of treatments known and available locations
 	public void updateTreatmentsKnown(HttpServletRequest request, PrintWriter out){
 		try{
-			// get symptoms and decide on condition
-			out.println(generate_doctor_page(doctorID, doctorName, symptoms, date, patient, loc_id, loc_name, condition, treatment, appt_id, loc_addr_1, loc_addr_2,
-                all_loc_id, allLocations, locationAvailable, treat_id, treatName, treatKnown));
+			// begin a transaction
+			DB.beginTransaction();
+
+			// get doctor ID from hidden field
+			int doctorID = Integer.parseInt(request.getParameter("did"));
+
+			// get list of all fid to determine which are checked
+			ArrayList<ArrayList<Object>> fids = DB.executeQuery("SELECT F.fid FROM Facilities F;", 1);
+
+			// first remove all locations
+			DB.executeUpdate("DELETE FROM WorksIn WHERE did = " + doctorID + ";");
+
+			// consider all check boxes "loc_x", where x is fid
+			for (int i = 0; i < fids.size(); i++){
+				Integer fid = (Integer) fids.get(i).get(0);
+				if (request.getParameter("loc_" + fid) != null)
+					DB.executeUpdate("INSERT INTO WorksIn VALUES("+doctorID+", " + fid + ");");
+			}
+
+			// now consider all treatments to update knows table
+			ArrayList<ArrayList<Object>> treatments = DB.executeQuery("SELECT T.tid FROM Treatments T;", 1);
+
+			// first remove all treatments known
+			DB.executeUpdate("DELETE FROM Knows WHERE did = " + doctorID + ";");
+
+			// consider all check boxes "treat_x", where x is tid
+			for (int i = 0; i < treatments.size(); i++){
+				Integer tid = (Integer) treatments.get(i).get(0);
+				if (request.getParameter("treat_" + tid) != null)
+					DB.executeUpdate("INSERT INTO Knows VALUES("+doctorID+", " + tid + ");");
+			}
+
+			// end transaction
+			DB.endTransaction();
+
+			// make hidden divider appear in output to confirm changes made
+			out.println(generate_doctor_page(doctorID).replace("<div id=\"changes_made\" style=\"display: none;\">", "<div id=\"changes_made\" style=\"display: block;\">"));
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
-	private String generate_doctor_page(int doctorID, String doctorName, String[][] symptoms, String[] date, String[] patient, int[] loc_id, String[] loc_name, String[] condition, String[] treatment, int[] appt_id, String[] loc_addr_1, String[] loc_addr_2, int[] all_loc_id, String[] allLocations, boolean[] locationAvailable, int[] treat_id, String[] treatName, boolean[] treatKnown) throws IOException {
+	private String generate_doctor_page(int doctorID) throws IOException {
 
         String html = readFileAsString(DOCTOR_TEMPLATE);
         String appointmentRows = "";
-        // concatenated into comma-separated lists
-        String[] symptomStrings = new String[symptoms.length];
         String allLocationRows = "";
         String locationDividers = "";
         String treatmentsKnown = "<tr>";
 
+        // begin a transaction
+		DB.beginTransaction();
 
-        for (int row = 0; row < symptoms.length; row++) {
-            symptomStrings[row] = "";
-            for (int i = 0; i < symptoms[row].length; i++) {
-                if (i != 0)
-                    symptomStrings[row] += ", ";
-                symptomStrings[row] += symptoms[row][i];
-            }
-        }
+		// get patient name
+		String doctorName = (String) DB.executeQuery("SELECT name FROM Doctors WHERE did = " + doctorID + ";", 1).get(0).get(0);
 
-        for (int appt = 0; appt < appt_id.length; appt++) {
-            appointmentRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> <a href=\"#\" onclick=\"showhide('location_%d');\">%s</a> </td> <td> %s </td> <td> %s </td> <td> %s </td> </tr>", date[appt], patient[appt], loc_id[appt], loc_name[appt], symptomStrings[appt], condition[appt], treatment[appt]);
-        }
+		// get all appointment information from database (except symptoms, which will get later)
+		ArrayList<ArrayList<Object>> appointmentInfo = DB.executeQuery("SELECT A.date, P.name, F.fid, F.name, C.name, T.name, A.aid FROM Patients P, Appointments A, Facilities F, ConditionsTreats C, Treatments T WHERE A.did =" + doctorID + " and A.fid = F.fid and A.pid = P.pid and C.cid=A.cid and T.tid=C.tid;", 7);
 
-        for (int loc = 0; loc < loc_id.length; loc++)
-            locationDividers += String.format("<div id=\"location_%d\" style=\"display: none;\">" + "<br>\n" + "<b> %s </b>\n" + "<ul>\n" + "%s <br>\n" + "%s\n" + "</ul>\n" + "</div>\n\n", loc_id[loc], loc_name[loc], loc_addr_1[loc], loc_addr_2[loc]);
+		// concatenated into comma-separated lists
+		String[] symptomStrings = new String[appointmentInfo.size()];
+		for (int row = 0; row < appointmentInfo.size(); row++) {
+			// get symptom info for this appointment
+			ArrayList<ArrayList<Object>> sympList = DB.executeQuery("SELECT S.name FROM Symptoms S, SymptomList L WHERE L.aid = " + appointmentInfo.get(row).get(6) + " and L.sid = S.sid;", 1);
+			symptomStrings[row] = "";
+			for (int i = 0; i < sympList.size(); i++) {
+				if (i != 0)
+					symptomStrings[row] += ", ";
+				symptomStrings[row] += (String) sympList.get(i).get(0);
+			}
+		}
 
-        for (int i = 0; i < all_loc_id.length; i++) {
-            allLocationRows += String.format("<tr><td> <input type=\"checkbox\" name=\"loc_%d\" %s> %s </td> </tr>\n", all_loc_id[i], locationAvailable[i] ? "checked" : "", allLocations[i]);
-        }
+		// print appointment info
+		for (int appt = 0; appt < appointmentInfo.size(); appt++) {
+			appointmentRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> <a href=\"#\" onclick=\"showhide('location_%d');\">%s</a> </td> <td> %s </td> <td> %s </td> <td> %s </td> </tr>",
+			(String) appointmentInfo.get(appt).get(0), (String) appointmentInfo.get(appt).get(1), (Integer) appointmentInfo.get(appt).get(2),
+			(String) appointmentInfo.get(appt).get(3), symptomStrings[appt], (String) appointmentInfo.get(appt).get(4), (String) appointmentInfo.get(appt).get(5));
+		}
 
-        for (int i = 0; i < treat_id.length; i++) {
-            treatmentsKnown += String.format("\t<td> <input type=\"checkbox\" name=\"treat_%d\" %s> %s </td>", treat_id[i], treatKnown[i] ? "checked": "", treatName[i]);
-            if (i > 0 && i < treat_id.length - 1 && i % 4 == 3)
+		// get all location addresses for dividers
+		ArrayList<ArrayList<Object>> facilityAddrs = DB.executeQuery("SELECT F.fid, F.name, F.addr1, F.addr2 FROM Facilities F", 4);
+		for (int loc = 0; loc < facilityAddrs.size(); loc++)
+			locationDividers += String.format("<div id=\"location_%d\" style=\"display: none;\"> <br>\n <b> %s </b>\n <ul>\n %s <br>\n %s\n </ul>\n </div>\n\n",
+			(Integer) facilityAddrs.get(loc).get(0), (String) facilityAddrs.get(loc).get(1), (String) facilityAddrs.get(loc).get(2), (String) facilityAddrs.get(loc).get(3));
+
+
+		// get information about which facilities this doctor works in
+		ArrayList<ArrayList<Object>> worksAt = DB.executeQuery("SELECT F.fid FROM Facilities F, WorksIn W WHERE W.did = " + doctorID + " and W.fid = F.fid;", 1);
+		ArrayList<Integer> locationAvailable = new ArrayList<Integer>();
+
+		for (int i = 0; i < worksAt.size(); i++)
+			locationAvailable.add((Integer) worksAt.get(i).get(0));
+
+		// print check boxes for working rows
+        for (int i = 0; i < facilityAddrs.size(); i++){
+			Integer fid = (Integer) facilityAddrs.get(i).get(0);
+            allLocationRows += String.format("<tr><td> <input type=\"checkbox\" name=\"loc_%d\" %s> %s </td> </tr>\n", fid, locationAvailable.contains(fid) ? "checked" : "", facilityAddrs.get(i).get(1));
+		}
+
+
+		// list all treatments and those known
+		ArrayList<ArrayList<Object>> treatments = DB.executeQuery("SELECT T.tid, T.name FROM Treatments T", 2);
+		ArrayList<ArrayList<Object>> knows = DB.executeQuery("SELECT T.tid FROM Treatments T, Knows K WHERE K.did = " + doctorID + " and T.tid = K.tid;", 1);
+		ArrayList<Integer> treatmentKnown = new ArrayList<Integer>();
+
+		for (int i = 0; i < knows.size(); i++)
+			treatmentKnown.add((Integer) knows.get(i).get(0));
+
+
+        for (int i = 0; i < treatments.size(); i++) {
+			Integer tid = (Integer) treatments.get(i).get(0);
+            treatmentsKnown += String.format("\t<td> <input type=\"checkbox\" name=\"treat_%d\" %s> %s </td>", tid, treatmentKnown.contains(tid) ? "checked": "", treatments.get(i).get(1));
+            if (i > 0 && i < treatments.size() - 1 && i % 4 == 3)
                 treatmentsKnown += "</tr>\n<tr>";
         }
         treatmentsKnown += "</tr>";
+
+        // end transaction
+		DB.endTransaction();
 
         html = html.replace("%DOCTOR_ID%", doctorID + "");
         html = html.replace("%DOCTOR_NAME%", doctorName);
@@ -173,37 +228,6 @@ public class DoctorServlet extends HttpServlet {
 			return e.getMessage() + "\n" + System.getProperty("user.dir");
 		}
 		return new String(buffer);
-
-    }
-
-    // Displays a table row for each item
-    private void printResultSet(PrintWriter out, String query, int num_cols) {
-
-        Connection connection = null;
-
-        try {
-
-            // Establish network connection to database
-            connection = DB.openConnection();
-
-            // Create a statement for executing the query
-            Statement statement = connection.createStatement();
-
-            // Send query to database and receive result
-            ResultSet resultSet = statement.executeQuery(query);
-
-            // Compose the rows.
-            while (resultSet.next()) {
-                out.println("<TR>");
-                for (int i = 1; i < num_cols+1; i++)
-	                out.println("<TD>" + resultSet.getObject(i) + "</TD>");
-                out.println("</TR>");
-            }
-			connection.close();
-        } catch (SQLException sqle) {
-            throw new RuntimeException("Error accessing database: " + sqle);
-		}
-
 
     }
 
