@@ -141,6 +141,8 @@ public class PatientServlet extends HttpServlet {
 			// add appointment
 			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + cid + ", \""+date+"\");");
 
+			// add prescripton based on treatment
+
 			// add all symptoms (will need to turn off autocommit to make efficient)
 			// get symptoms and decide on condition
 			for (int i = 0; i < symptoms.size(); i++)

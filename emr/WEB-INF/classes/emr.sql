@@ -82,41 +82,43 @@ CREATE TABLE Uses(	pid INT,
 -- so it goes faster
 SET autocommit = 0;
 
-insert into patients values(1, "Paul McCormack", "3/45/56", 140);
+insert into symptoms values(1, "Abdominal pain", "");
+insert into symptoms values(2, "Constipation", "");
+insert into symptoms values(3, "Cough", "");
+insert into symptoms values(4, "Decreased hearing", "");
+insert into symptoms values(5, "Diarrhea", "");
+insert into symptoms values(6, "Earache", "");
+insert into symptoms values(7, "Eye discomfort and redness", "");
+insert into symptoms values(8, "Fever", "");
+insert into symptoms values(9, "Headaches", "");
+insert into symptoms values(10, "Joint pain or muscle pain", "");
+insert into symptoms values(11, "Nasal congestion", "");
+insert into symptoms values(12, "Nausea or vomiting", "");
+insert into symptoms values(13, "Skin rashes", "");
+insert into symptoms values(14, "Sore throat", "");
+insert into symptoms values(15, "Urinary problems", "");
+insert into symptoms values(16, "Vision problems", "");
+insert into symptoms values(17, "Wheezing", "");
 
-insert into doctors values(1, "Dr. Nobody", "DDS");
+-- insert into patients values(1, "Paul McCormack", "3/45/56", 140);
+-- insert into doctors values(1, "Dr. Nobody", "DDS");
+-- insert into facilities values(1, "Meadows Branch", "2983 Lincoln Ave.", "Redwood, CA 97876");
+-- insert into treatments(tid, name, cost) values (1, "Sleep", 0);
+-- insert into treatments(tid, name, cost) values (2, "Oral Rehydration Salts", 7.75);
+-- insert into conditionstreats values(1, "Allergies", "", 0.6, 1);
+-- insert into conditionstreats values(2, "Cholera", "from contaminated food/water", 0.003, 2);
+-- insert into Appointments values(1, 1, 1, 1, 1, "1/1/12");
+-- insert into takesprescriptions values(1, 1, 1, "long time");
 
-insert into facilities values(1, "Meadows Branch", "2983 Lincoln Ave.", "Redwood, CA 97876");
+-- insert into SymptomList values(1, 4);
+-- insert into SymptomList values(1, 6);
 
+-- insert into worksin values(1, 1);
 
-insert into treatments(tid, name, cost) values (1, "Sleep", 0);
-insert into treatments(tid, name, cost) values (2, "Oral Rehydration Salts", 7.75);
+-- insert into knows values(1, 1);
 
-insert into conditionstreats values(1, "Allergies", "", 0.6, 1);
-insert into conditionstreats values(2, "Cholera", "from contaminated food/water", 0.003, 2);
-
-insert into Appointments values(1, 1, 1, 1, 1, "1/1/12");
-
-insert into takesprescriptions values(1, 1, 1, "long time");
-
-insert into symptoms values(1, "Nausea", "");
-insert into symptoms values(2, "Vomiting", "");
-insert into symptoms values(3, "Headache", "");
-insert into symptoms values(4, "Runny Nose", "");
-insert into symptoms values(5, "Sore Muscles", "");
-insert into symptoms values(6, "Itchy Eyes", "");
-insert into symptoms values(7, "Rashes", "");
-
-insert into SymptomList values(1, 4);
-insert into SymptomList values(1, 6);
-
-insert into worksin values(1, 1);
-
-
-insert into knows values(1, 1);
-
-insert into insurance values("Cigna", 1);
-insert into uses values(1,"Cigna");
+-- insert into insurance values("Cigna", 1);
+-- insert into uses values(1,"Cigna");
 
 COMMIT;
 SET autocommit = 1;

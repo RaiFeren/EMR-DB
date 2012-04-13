@@ -145,7 +145,11 @@ public class AdminServlet extends HttpServlet {
 			DB.executeUpdate("INSERT INTO Doctors VALUES(" + did + ", \"" + name + "\", \"" + degree + "\");");
 			DB.endTransaction();
 
-			out.println(generate_admin_page());
+			String adminPage = generate_admin_page();
+			adminPage = adminPage.replace("doctor_success\" style=\"display: none", "doctor_success\" style=\"display: block");
+			adminPage = adminPage.replace("%DOCTOR_NAME%", name + "");
+			adminPage = adminPage.replace("%DOCTOR_ID%", did + "");
+			out.println(adminPage);
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");

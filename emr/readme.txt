@@ -3,7 +3,16 @@
  * April 10, 2012
  */
 
-First execute emr.sql to create the necessary tables.  Not closing the sql terminal window sometimes caused my servlet's delete statements to freeze, since some locks were not released.
+First execute emr.sql to create the necessary tables.  
+
+First execute these commands:
+	DROP DATABASE IF EXISTS emr;
+	CREATE DATABASE emr;
+	USE emr;
+and then run the emr_backup.txt script.
+
+To backup the sql tables to a script, use
+	mysqldump -p --user=root emr > "FILENAME"
 
 The .class files are in the directory already, but you can compile it again from within the directory using
 	javac -classpath servlet-api.jar *.java
