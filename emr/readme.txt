@@ -8,8 +8,8 @@ First execute emr.sql to create the necessary tables.
 First execute these commands:
 	DROP DATABASE IF EXISTS emr;
 	CREATE DATABASE emr;
-	USE emr;
 and then run the emr_backup.txt script.
+mysql -u root -p --database=emr2 < "C:\Documents and Settings\pmccorma\emr_backup.txt"
 
 To backup the sql tables to a script, use
 	mysqldump -p --user=root emr > "FILENAME"

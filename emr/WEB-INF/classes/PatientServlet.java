@@ -122,10 +122,58 @@ public class PatientServlet extends HttpServlet {
 			// get symptoms and decide on condition
 			DB.beginTransaction();
 			ArrayList<ArrayList<Object>> possibleSymptoms = DB.executeQuery("SELECT sid FROM Symptoms", 1);
-			ArrayList<Integer> symptoms = new ArrayList<Integer>();
+			ArrayList<Object> symptoms = new ArrayList<Object>();
 			for (int i = 0; i < possibleSymptoms.size(); i++)
 				if (request.getParameter("sym_" + possibleSymptoms.get(i).get(0)) != null)
-					symptoms.add((Integer) possibleSymptoms.get(i).get(0));
+					symptoms.add(possibleSymptoms.get(i).get(0));
+
+			// P(cond | s1, s2, s3,...) = P(cond) * (P(s1 | cond) * P(s2 | cond) * P(s3 | cond) * ...) / P(s1) * P(s2) ...
+			// find probability of each conditions given the symptoms, denominator is always the same for any given set of symptoms, so normalize out
+
+			// unconditional probabilities of condition (frequency in population)
+			ArrayList<ArrayList<Object>> uncondConditionProbabilities = DB.executeQuery("SELECT cid, probability FROM ConditionsTreats;", 2);
+
+			// iterate through all conditions
+			double maxProbability = 0;
+			int maxCondition = -1;
+			for (int c = 0; c < uncondConditionProbabilities.size(); c++){
+				int cid = (Integer) uncondConditionProbabilities.get(c).get(0);
+				double prob = (Double) uncondConditionProbabilities.get(c).get(1);
+
+				// get symptom probability
+				ArrayList<ArrayList<Object>> symProbs = DB.executeQuery("SELECT sid, probability FROM Implies WHERE cid = " + cid + ";", 2);
+
+				for (int s = 0; s < symProbs.size(); s++){
+					if (symptoms.contains(symProbs.get(s).get(0)))
+						prob *= (Double) symProbs.get(s).get(1);
+				}
+
+				if (prob > maxProbability){
+					maxCondition = cid;
+					maxProbability = prob;
+				}
+			}
+
+			if (maxCondition == -1){
+				// there are no conditions in the database, maybe print an error?
+				DB.endTransaction();
+				out.println("The database has no conditions in it!");
+				out.println(generate_patient_page(patientID));
+				return;
+			}
+
+			// now that we know the most likely condition, find the treatment for it and its name
+			ArrayList<ArrayList<Object>> treatment = DB.executeQuery("SELECT C.tid, T.name FROM ConditionsTreats C, Treatments T WHERE C.cid = " + maxCondition + " and T.tid = C.tid;", 2);
+			int tid = (Integer) treatment.get(0).get(0);
+			String treatName = (String) treatment.get(0).get(1);
+
+			// find a doctor that knows how to treat it
+			ArrayList<ArrayList<Object>> doctorToTreat = DB.executeQuery("SELECT K.did FROM Knows K WHERE K.tid = " + tid + ";", 1);
+			int did = (Integer) doctorToTreat.get((int)(doctorToTreat.size()*Math.random())).get(0);
+
+			// find where this doctor works
+			ArrayList<ArrayList<Object>> doctorWorks = DB.executeQuery("SELECT W.fid FROM WorksIn W WHERE W.did = " + did + ";", 1);
+			int fid = (Integer) doctorWorks.get((int)(doctorWorks.size()*Math.random())).get(0);
 
 			// create a new appointment
 			// get a new appointment id
@@ -133,17 +181,15 @@ public class PatientServlet extends HttpServlet {
 			Object result = DB.executeQuery("SELECT MAX(aid) FROM Appointments", 1).get(0).get(0);
 			if (result != null)
 				aid = Integer.parseInt(result.toString()) + 1;
-			Integer did = 1;
-			Integer fid = 1;
-			Integer cid = 1;		// assume for now that it exists
+
 			String date = "NEW APPT";
 
 			// add appointment
-			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + cid + ", \""+date+"\");");
+			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + maxCondition + ", \""+date+"\");");
 
 			// add prescripton based on treatment
+			DB.executeUpdate("INSERT INTO TakesPrescriptions VALUES("+patientID+", "+tid+", "+did+", \"indefinitely\");");
 
-			// add all symptoms (will need to turn off autocommit to make efficient)
 			// get symptoms and decide on condition
 			for (int i = 0; i < symptoms.size(); i++)
 				DB.executeUpdate("INSERT INTO SymptomList VALUES("+aid+", "+symptoms.get(i)+");");
@@ -200,7 +246,7 @@ public class PatientServlet extends HttpServlet {
 	        String patientName = (String) DB.executeQuery("SELECT name FROM Patients WHERE pid = " + patientID + ";", 1).get(0).get(0);
 
 			// get all appointment information from database (except symptoms, which will get later)
-			ArrayList<ArrayList<Object>> appointmentInfo = DB.executeQuery("SELECT A.date, D.name, F.fid, F.name, A.aid FROM Appointments A, Doctors D, Facilities F WHERE A.pid=" + patientID + " and A.did = D.did and A.fid = F.fid;", 5);
+			ArrayList<ArrayList<Object>> appointmentInfo = DB.executeQuery("SELECT A.date, D.name, F.fid, F.name, A.aid, C.name FROM Appointments A, Doctors D, Facilities F, ConditionsTreats C WHERE A.pid=" + patientID + " and A.did = D.did and A.fid = F.fid and C.cid = A.cid;", 6);
 
 			// concatenated into comma-separated lists
 	        String[] symptomStrings = new String[appointmentInfo.size()];
@@ -217,9 +263,9 @@ public class PatientServlet extends HttpServlet {
 
 			// print appointment info
 	        for (int appt = 0; appt < appointmentInfo.size(); appt++) {
-	            appointmentRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> <a href=\"#\" onclick=\"showhide('location_%d');\">%s</a> </td> <td> %s </td> <td> <input type=\"submit\" name=\"cancel_%d\" value=\"Cancel\"> </td> </tr>\n",
+	            appointmentRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> <a href=\"#\" onclick=\"showhide('location_%d');\">%s</a> </td> <td> %s </td> <td> %s </td> <td> <input type=\"submit\" name=\"cancel_%d\" value=\"Cancel\"> </td> </tr>\n",
 	            (String) appointmentInfo.get(appt).get(0), (String) appointmentInfo.get(appt).get(1), (Integer) appointmentInfo.get(appt).get(2),
-	            (String) appointmentInfo.get(appt).get(3), symptomStrings[appt], (Integer) appointmentInfo.get(appt).get(4));
+	            (String) appointmentInfo.get(appt).get(3), symptomStrings[appt], (String) appointmentInfo.get(appt).get(5), (Integer) appointmentInfo.get(appt).get(4));
 	            //date[appt], doctor[appt], loc_id[appt], loc_name[appt], symptomStrings[appt], appt_id[appt]);
 	        }
 

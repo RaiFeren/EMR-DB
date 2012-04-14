@@ -46,7 +46,7 @@ CREATE TABLE Appointments(	aid INT PRIMARY KEY,
 				FOREIGN KEY (fid) REFERENCES Facilities (fid),
 				FOREIGN KEY (cid) REFERENCES ConditionsTreats (cid));
 
-CREATE TABLE Symptoms(sid INT PRIMARY KEY, name CHAR(30) NOT NULL, descr CHAR(30));
+CREATE TABLE Symptoms(sid INT PRIMARY KEY, name CHAR(30) NOT NULL, descr CHAR(30), real probability);
 
 CREATE TABLE SymptomList(	aid INT, 
 				sid INT, 
