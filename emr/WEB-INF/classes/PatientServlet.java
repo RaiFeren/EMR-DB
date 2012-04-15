@@ -48,8 +48,8 @@ public class PatientServlet extends HttpServlet {
 			registerPatient(request, out);
 		else if(request.getParameter("create") != null)			// create an appointment
 			createAppointment(request, out);
-		else 													// canceling any appointment
-			cancelAppointment(request, out);
+		else 													// canceling any appointment or remove prescription
+			cancelAppointmentOrPrescription(request, out);
     }
 
 
@@ -133,9 +133,18 @@ public class PatientServlet extends HttpServlet {
 			// unconditional probabilities of condition (frequency in population)
 			ArrayList<ArrayList<Object>> uncondConditionProbabilities = DB.executeQuery("SELECT cid, probability FROM ConditionsTreats;", 2);
 
+			if (uncondConditionProbabilities.size() == 0){
+				// there are no conditions in the database, maybe print an error?
+				DB.endTransaction();
+				out.println("The database has no conditions in it!");
+				out.println(generate_patient_page(patientID));
+				return;
+			}
+
 			// iterate through all conditions
 			double maxProbability = 0;
 			int maxCondition = -1;
+
 			for (int c = 0; c < uncondConditionProbabilities.size(); c++){
 				int cid = (Integer) uncondConditionProbabilities.get(c).get(0);
 				double prob = (Double) uncondConditionProbabilities.get(c).get(1);
@@ -144,22 +153,20 @@ public class PatientServlet extends HttpServlet {
 				ArrayList<ArrayList<Object>> symProbs = DB.executeQuery("SELECT sid, probability FROM Implies WHERE cid = " + cid + ";", 2);
 
 				for (int s = 0; s < symProbs.size(); s++){
-					if (symptoms.contains(symProbs.get(s).get(0)))
-						prob *= (Double) symProbs.get(s).get(1);
+					if (symptoms.contains(symProbs.get(s).get(0))){
+						double mult = (Double) symProbs.get(s).get(1);
+						// a probability of 0 will not be factored in
+						// for example, if you have a cough, that does not mean that you absolutely do not have giardiasis
+						// it is just not related
+						if (mult != 0)
+							prob *= mult;
+					}
 				}
 
 				if (prob > maxProbability){
 					maxCondition = cid;
 					maxProbability = prob;
 				}
-			}
-
-			if (maxCondition == -1){
-				// there are no conditions in the database, maybe print an error?
-				DB.endTransaction();
-				out.println("The database has no conditions in it!");
-				out.println(generate_patient_page(patientID));
-				return;
 			}
 
 			// now that we know the most likely condition, find the treatment for it and its name
@@ -182,7 +189,7 @@ public class PatientServlet extends HttpServlet {
 			if (result != null)
 				aid = Integer.parseInt(result.toString()) + 1;
 
-			String date = "NEW APPT";
+			String date = "Drop In";
 
 			// add appointment
 			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + maxCondition + ", \""+date+"\");");
@@ -203,7 +210,7 @@ public class PatientServlet extends HttpServlet {
 	}
 
 	// cancel an appointment by id (note that patient id is in hidden html field)
-	public void cancelAppointment(HttpServletRequest request, PrintWriter out){
+	public void cancelAppointmentOrPrescription(HttpServletRequest request, PrintWriter out){
 		try{
 			// get patient ID
 			int patientID = Integer.parseInt(request.getParameter("pid"));
@@ -214,14 +221,36 @@ public class PatientServlet extends HttpServlet {
 			ArrayList<ArrayList<Object>> appts = DB.executeQuery("SELECT A.aid FROM Appointments A WHERE A.pid = " + patientID + ";", 1);
 
 			// check all buttons with ids "cancel_i", where i is aid
-			for (int i = 0; i < appts.size(); i++)
-				if (request.getParameter("cancel_" + appts.get(i).get(0)) != null){
-					apptID = (Integer) appts.get(i).get(0);
+			for (int i = 0; i < appts.size(); i++){
+				apptID = (Integer) appts.get(i).get(0);
+				if (request.getParameter("cancel_" + apptID) != null)
 					break;
-				}
-
+				apptID = -1;
+			}
+			// make sure an appointment was selected
 			if (apptID != -1)
 				DB.executeUpdate("DELETE FROM Appointments WHERE aid = " + apptID + ";");
+
+
+			// not an appointment - must be a prescription
+			int tid = -1, did = -1;
+
+			// get all prescriptions
+			ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT P.tid, P.did FROM TakesPrescriptions P WHERE P.pid = " + patientID + ";", 2);
+
+			// check all buttons with ids "remove_i", where i is tid + "|" + did
+			for (int i = 0; i < prescriptions.size(); i++){
+				tid = (Integer) prescriptions.get(i).get(0);
+				did = (Integer) prescriptions.get(i).get(1);
+				if (request.getParameter("remove_" + tid + "|" + did) != null)
+					break;
+				tid = -1;
+			}
+
+			// remove at most one prescription if one was selected (some may be identical, in which case it doesn't matter which is removed)
+			if (tid != -1)
+				DB.executeUpdate("DELETE FROM TakesPrescriptions WHERE pid = " + patientID + " and tid = " + tid + " and did = " + did + " LIMIT 1;");
+
 			DB.endTransaction();
 			out.println(generate_patient_page(patientID));
 
@@ -270,10 +299,10 @@ public class PatientServlet extends HttpServlet {
 	        }
 
 	        // get all prescriptions
-	        ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT T.name, D.name, T.cost, R.howlong FROM Treatments T, TakesPrescriptions R, Patients P, Doctors D WHERE P.pid = " + patientID + " and R.pid = P.pid and T.tid = R.tid and D.did = R.did;", 4);
+	        ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT T.name, D.name, T.cost, R.howlong, T.tid, D.did FROM Treatments T, TakesPrescriptions R, Patients P, Doctors D WHERE P.pid = " + patientID + " and R.pid = P.pid and T.tid = R.tid and D.did = R.did;", 6);
 			for (int i = 0; i < prescriptions.size(); i++) {
-				prescriptionRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> %s </td> <td> %s </td> </tr>\n",
-				(String) prescriptions.get(i).get(0), (String) prescriptions.get(i).get(1), (Double) prescriptions.get(i).get(2), (String) prescriptions.get(i).get(3));
+				prescriptionRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> %s </td> <td> %s </td>  <td> <input type=\"submit\" name=\"remove_%d|%d\" value=\"Remove\"> </td> </tr>\n",
+				(String) prescriptions.get(i).get(0), (String) prescriptions.get(i).get(1), (Double) prescriptions.get(i).get(2), (String) prescriptions.get(i).get(3), (Integer) prescriptions.get(i).get(4), (Integer) prescriptions.get(i).get(5));
 	        }
 
 			// get all location addresses for dividers
