@@ -6,7 +6,7 @@ DROP DATABASE IF EXISTS emr;
 
 CREATE DATABASE emr;
 
--- GRANT ALL PRIVILEGES ON emr.* to root@localhost IDENTIFIED BY 'root';
+GRANT ALL PRIVILEGES ON emr.* to root@localhost IDENTIFIED BY 'root';
 
 USE emr;
 

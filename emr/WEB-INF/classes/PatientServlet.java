@@ -114,6 +114,7 @@ public class PatientServlet extends HttpServlet {
 	}
 
 	// create an appointment by id (note that patient id is in hidden html field)
+	private int tries = 0;  // number of times tried already
 	public void createAppointment(HttpServletRequest request, PrintWriter out){
 		try{
 			// get patient ID
@@ -189,10 +190,10 @@ public class PatientServlet extends HttpServlet {
 			if (result != null)
 				aid = Integer.parseInt(result.toString()) + 1;
 
-			String date = "Drop In";
-
 			// add appointment
-			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + maxCondition + ", \""+date+"\");");
+			java.sql.Date date = (java.sql.Date) DB.executeQuery("SELECT DATE_ADD(CURRENT_DATE, INTERVAL " + (int)(42*Math.random()) + " DAY)", 1).get(0).get(0);
+			out.println(date);
+			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + maxCondition + ", \"" + date + "\");");
 
 			// add prescripton based on treatment
 			DB.executeUpdate("INSERT INTO TakesPrescriptions VALUES("+patientID+", "+tid+", "+did+", \"indefinitely\");");
@@ -206,7 +207,11 @@ public class PatientServlet extends HttpServlet {
 
 		} catch (java.lang.Exception ex2){
 			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			tries++;
+			if (tries < 3)
+				createAppointment(request,out);
 		}
+		tries = 0;
 	}
 
 	// cancel an appointment by id (note that patient id is in hidden html field)
@@ -299,7 +304,7 @@ public class PatientServlet extends HttpServlet {
 	        }
 
 	        // get all prescriptions
-	        ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT T.name, D.name, T.cost, R.howlong, T.tid, D.did FROM Treatments T, TakesPrescriptions R, Patients P, Doctors D WHERE P.pid = " + patientID + " and R.pid = P.pid and T.tid = R.tid and D.did = R.did;", 6);
+	        ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT T.name, D.name, T.cost, R.howlong, T.tid, D.did FROM Treatments T, TakesPrescriptions R, Doctors D WHERE R.pid = " + patientID + " and T.tid = R.tid and D.did = R.did;", 6);
 			for (int i = 0; i < prescriptions.size(); i++) {
 				prescriptionRows += String.format("<tr> <td> %s </td> <td> %s </td> <td> %s </td> <td> %s </td>  <td> <input type=\"submit\" name=\"remove_%d|%d\" value=\"Remove\"> </td> </tr>\n",
 				(String) prescriptions.get(i).get(0), (String) prescriptions.get(i).get(1), (Double) prescriptions.get(i).get(2), (String) prescriptions.get(i).get(3), (Integer) prescriptions.get(i).get(4), (Integer) prescriptions.get(i).get(5));
