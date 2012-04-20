@@ -449,4 +449,22 @@ for each row call check_CST() |
 
 -- UPDATE 
 
+CREATE TRIGGER insurancecountup BEFORE INSERT on `Uses`
+       FOR EACH ROW
+       BEGIN
+           UPDATE Insurance
+           SET num_users = num_users + 1
+           WHERE name = NEW.name;
+       END;
+|
+
+CREATE TRIGGER insurancecountdown BEFORE DELETE on `Uses`
+       FOR EACH ROW
+       BEGIN
+           UPDATE Insurance
+           SET num_users = num_users - 1
+           WHERE name = OLD.name;
+       END;
+|
+
 delimiter ;
