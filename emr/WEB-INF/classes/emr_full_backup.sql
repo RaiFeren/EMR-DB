@@ -15,6 +15,9 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+drop database if exists emr;
+create database emr;
+use emr;
 --
 -- Table structure for table `appointments`
 --
@@ -171,7 +174,7 @@ DROP TABLE IF EXISTS `insurance`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `insurance` (
   `name` char(30) DEFAULT NULL,
-  `num_users` int(11) DEFAULT NULL,
+  `description` char(200) DEFAULT NULL,
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -182,7 +185,7 @@ CREATE TABLE `insurance` (
 
 LOCK TABLES `insurance` WRITE;
 /*!40000 ALTER TABLE `insurance` DISABLE KEYS */;
-INSERT INTO `insurance` VALUES ('Cigna',2),('AIG',1),('State Farm',1),('Kaiser',1);
+INSERT INTO `insurance` VALUES ('Cigna',""),('AIG',""),('State Farm',""),('Kaiser',"");
 /*!40000 ALTER TABLE `insurance` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -362,9 +365,8 @@ DROP TABLE IF EXISTS `uses`;
 CREATE TABLE `uses` (
   `pid` int(11) DEFAULT NULL,
   `name` char(30) DEFAULT NULL,
-  KEY `pid` (`pid`),
-  CONSTRAINT `uses_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
-  PRIMARY KEY ('pid')
+  PRIMARY KEY (`pid`),
+  CONSTRAINT `uses_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -454,22 +456,22 @@ for each row call check_CST() |
 
 -- UPDATE 
 
-CREATE TRIGGER insurancecountup BEFORE INSERT on `Uses`
-       FOR EACH ROW
-       BEGIN
-           UPDATE Insurance
-           SET num_users = num_users + 1
-           WHERE name = NEW.name;
-       END;
-|
+-- CREATE TRIGGER insurancecountup BEFORE INSERT on `Uses`
+--     FOR EACH ROW
+--        BEGIN
+--            UPDATE Insurance
+--            SET num_users = num_users + 1
+--            WHERE name = NEW.name;
+--        END;
+-- |
 
-CREATE TRIGGER insurancecountdown BEFORE DELETE on `Uses`
-       FOR EACH ROW
-       BEGIN
-           UPDATE Insurance
-           SET num_users = num_users - 1
-           WHERE name = OLD.name;
-       END;
-|
+-- CREATE TRIGGER insurancecountdown BEFORE DELETE on `Uses`
+--        FOR EACH ROW
+--        BEGIN
+--            UPDATE Insurance
+--            SET num_users = num_users - 1
+--            WHERE name = OLD.name;
+--        END;
+-- |
 
 delimiter ;
