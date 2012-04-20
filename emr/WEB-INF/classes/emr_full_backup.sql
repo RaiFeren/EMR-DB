@@ -363,7 +363,8 @@ CREATE TABLE `uses` (
   `pid` int(11) DEFAULT NULL,
   `name` char(30) DEFAULT NULL,
   KEY `pid` (`pid`),
-  CONSTRAINT `uses_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE
+  CONSTRAINT `uses_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
+  PRIMARY KEY ('pid')
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
