@@ -34,10 +34,10 @@ CREATE TABLE `appointments` (
   KEY `did` (`did`),
   KEY `fid` (`fid`),
   KEY `cid` (`cid`),
-  CONSTRAINT `appointments_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`),
-  CONSTRAINT `appointments_ibfk_2` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`),
-  CONSTRAINT `appointments_ibfk_3` FOREIGN KEY (`fid`) REFERENCES `facilities` (`fid`),
-  CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`)
+  CONSTRAINT `appointments_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
+  CONSTRAINT `appointments_ibfk_2` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE,
+  CONSTRAINT `appointments_ibfk_3` FOREIGN KEY (`fid`) REFERENCES `facilities` (`fid`) ON DELETE CASCADE,
+  CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -63,10 +63,10 @@ CREATE TABLE `conditionstreats` (
   `name` char(30) NOT NULL,
   `info` char(100) DEFAULT NULL,
   `probability` double DEFAULT NULL,
-  `tid` int(11) DEFAULT NULL,
+  `tid` int(11) NOT NULL,
   PRIMARY KEY (`cid`),
   KEY `tid` (`tid`),
-  CONSTRAINT `conditionstreats_ibfk_1` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`)
+  CONSTRAINT `conditionstreats_ibfk_1` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -144,8 +144,8 @@ CREATE TABLE `implies` (
   `probability` double DEFAULT NULL,
   KEY `sid` (`sid`),
   KEY `cid` (`cid`),
-  CONSTRAINT `implies_ibfk_1` FOREIGN KEY (`sid`) REFERENCES `symptoms` (`sid`),
-  CONSTRAINT `implies_ibfk_2` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`)
+  CONSTRAINT `implies_ibfk_1` FOREIGN KEY (`sid`) REFERENCES `symptoms` (`sid`) ON DELETE CASCADE,
+  CONSTRAINT `implies_ibfk_2` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -195,8 +195,8 @@ CREATE TABLE `knows` (
   `tid` int(11) DEFAULT NULL,
   KEY `did` (`did`),
   KEY `tid` (`tid`),
-  CONSTRAINT `knows_ibfk_1` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`),
-  CONSTRAINT `knows_ibfk_2` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`)
+  CONSTRAINT `knows_ibfk_1` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE,
+  CONSTRAINT `knows_ibfk_2` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -303,9 +303,9 @@ CREATE TABLE `takesprescriptions` (
   KEY `pid` (`pid`),
   KEY `tid` (`tid`),
   KEY `did` (`did`),
-  CONSTRAINT `takesprescriptions_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`),
-  CONSTRAINT `takesprescriptions_ibfk_2` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`),
-  CONSTRAINT `takesprescriptions_ibfk_3` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`)
+  CONSTRAINT `takesprescriptions_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
+  CONSTRAINT `takesprescriptions_ibfk_2` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`) ON DELETE CASCADE,
+  CONSTRAINT `takesprescriptions_ibfk_3` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -359,7 +359,7 @@ CREATE TABLE `uses` (
   `pid` int(11) DEFAULT NULL,
   `name` char(30) DEFAULT NULL,
   KEY `pid` (`pid`),
-  CONSTRAINT `uses_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`)
+  CONSTRAINT `uses_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -385,8 +385,8 @@ CREATE TABLE `worksin` (
   `fid` int(11) DEFAULT NULL,
   KEY `did` (`did`),
   KEY `fid` (`fid`),
-  CONSTRAINT `worksin_ibfk_1` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`),
-  CONSTRAINT `worksin_ibfk_2` FOREIGN KEY (`fid`) REFERENCES `facilities` (`fid`)
+  CONSTRAINT `worksin_ibfk_1` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE,
+  CONSTRAINT `worksin_ibfk_2` FOREIGN KEY (`fid`) REFERENCES `facilities` (`fid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -409,4 +409,44 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-04-16 20:06:45
+-- now create all triggers and procedures to check
+-- for declaring errors
+create table error(msg CHAR(100) PRIMARY KEY);
+insert into error values("Cannot perform operations on Symptoms"), ("Condition and Symptoms must be changed simultaneously."), ("empty");
+
+delimiter |
+
+-- NO INSERT, UPDATE, DELETE ON SYMPTOMS TABLE
+create trigger reject_symptom_insert before insert on Symptoms
+for each row insert into error values("Cannot perform operations on Symptoms");
+|
+
+create trigger reject_symptom_delete before delete on Symptoms
+for each row insert into error values("Cannot perform operations on Symptoms");
+|
+
+create trigger reject_symptom_update before update on Symptoms
+for each row insert into error values("Cannot perform operations on Symptoms");
+|
+
+-- MAKE SURE IMPLIES TABLE IS COMPLETELY FILLED OUT (EACH CONDITION HAS CORRESPONDING SYMPTOMS) ON INSERT
+-- so clearly (num_symptoms)*(num_conditions) = (num_implies) will check the condition since the foreign key constraints prevent
+-- fake data
+
+CREATE PROCEDURE check_CST()
+update error
+set msg = IF((select count(*) from symptoms)*(select count(*) from conditionstreats) = (select count(*) from implies), "empty", "Condition and Symptoms must be changed simultaneously.")
+WHERE msg = "empty"|
+
+create trigger cond_symp_1 before insert on ConditionsTreats
+for each row call check_CST() |
+
+create trigger cond_symp_2 before insert on Implies
+for each row call check_CST() |
+
+create trigger cond_symp_3 before delete on Implies
+for each row call check_CST() |
+
+-- UPDATE 
+
+delimiter ;
