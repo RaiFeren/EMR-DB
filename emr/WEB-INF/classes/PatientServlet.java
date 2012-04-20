@@ -101,8 +101,12 @@ public class PatientServlet extends HttpServlet {
 
 			// insert information into insurance and uses table
 			// will not insert duplicate row by primary key constraint
-			DB.executeUpdate("INSERT INTO Insurance VALUES(\"" + insurance + "\", 0);");
-			DB.executeUpdate("UPDATE Insurance SET num_users = num_users + 1 WHERE name LIKE \"" + insurance + "\";");
+			ArrayList<ArrayList<Object>> numUsers = DB.executeQuery("SELECT num_users FROM Insurance WHERE name LIKE \"" + insurance + "\";", 1);
+			if (numUsers.size() == 0)
+				DB.executeUpdate("INSERT INTO Insurance VALUES(\"" + insurance + "\", 1);");
+			else
+				DB.executeUpdate("UPDATE Insurance SET num_users = num_users + 1 WHERE name LIKE \"" + insurance + "\";");
+
 			DB.executeUpdate("INSERT INTO Uses VALUES(" + patientID + ", \"" + insurance + "\");");
 			DB.endTransaction();
 

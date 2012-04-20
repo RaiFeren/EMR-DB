@@ -76,9 +76,6 @@ CREATE TABLE Uses(	pid INT,
 			name CHAR(30),
 			FOREIGN KEY (pid) REFERENCES Patients (pid));
 
--- trigger to change insurance uses number on delete/insert from uses
-
-
 -- so it goes faster
 SET autocommit = 0;
 

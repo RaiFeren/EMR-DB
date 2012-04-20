@@ -28,7 +28,7 @@ CREATE TABLE `appointments` (
   `did` int(11) DEFAULT NULL,
   `fid` int(11) DEFAULT NULL,
   `cid` int(11) DEFAULT NULL,
-  `date` DATE NOT NULL,
+  `date` char(11) NOT NULL,
   PRIMARY KEY (`aid`),
   KEY `pid` (`pid`),
   KEY `did` (`did`),
@@ -47,7 +47,7 @@ CREATE TABLE `appointments` (
 
 LOCK TABLES `appointments` WRITE;
 /*!40000 ALTER TABLE `appointments` DISABLE KEYS */;
-INSERT INTO `appointments` VALUES (1,3,7,1,5,'Drop In'),(3,5,3,1,7,'Drop In'),(4,1,5,5,3,'Drop In'),(5,5,2,4,9,'Drop In'),(6,4,4,3,10,'Drop In'),(8,4,3,1,4,'Drop In'),(9,4,4,3,10,'Drop In');
+INSERT INTO `appointments` VALUES (1,3,7,1,5,'2012-06-31'),(3,5,3,1,7,'Drop In'),(4,1,5,5,3,'Drop In'),(5,5,2,4,9,'Drop In'),(6,4,4,3,10,'Drop In'),(8,4,3,1,4,'Drop In'),(9,4,4,3,10,'Drop In');
 /*!40000 ALTER TABLE `appointments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -168,7 +168,8 @@ DROP TABLE IF EXISTS `insurance`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `insurance` (
   `name` char(30) DEFAULT NULL,
-  `num_users` int(11) DEFAULT NULL
+  `num_users` int(11) DEFAULT NULL,
+  PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -178,7 +179,7 @@ CREATE TABLE `insurance` (
 
 LOCK TABLES `insurance` WRITE;
 /*!40000 ALTER TABLE `insurance` DISABLE KEYS */;
-INSERT INTO `insurance` VALUES ('Cigna',2),('AIG',1),('Cigna',1),('State Farm',1),('Kaiser',1);
+INSERT INTO `insurance` VALUES ('Cigna',2),('AIG',1),('State Farm',1),('Kaiser',1);
 /*!40000 ALTER TABLE `insurance` ENABLE KEYS */;
 UNLOCK TABLES;
 
