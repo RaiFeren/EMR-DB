@@ -37,7 +37,8 @@ CREATE TABLE `appointments` (
   CONSTRAINT `appointments_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
   CONSTRAINT `appointments_ibfk_2` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE,
   CONSTRAINT `appointments_ibfk_3` FOREIGN KEY (`fid`) REFERENCES `facilities` (`fid`) ON DELETE CASCADE,
-  CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`) ON DELETE CASCADE
+  CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`) ON DELETE SET NULL 
+  -- Can have unknown condition, thus change in conditions shouldn't stop an appointment.
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -130,6 +131,8 @@ LOCK TABLES `facilities` WRITE;
 INSERT INTO `facilities` VALUES (1,'Boulder Medical Center','2750 Broadway','Boulder, CO 80304'),(2,'Boulder Community Hospital','110 Balsam Ave.','Boulder, CO 80304'),(3,'St. Luke\'s Medical Center','1719 East 19th Avev','Denver, CO 80218'),(4,'North Boulder Dental','1001 North Street','Boulder, CO 80304'),(5,'The Allergy Stop','695 South Colorado Blvd','Denver, CO 80246');
 /*!40000 ALTER TABLE `facilities` ENABLE KEYS */;
 UNLOCK TABLES;
+
+-- ' to fix dumb syntax highlighting...
 
 --
 -- Table structure for table `implies`
@@ -305,7 +308,8 @@ CREATE TABLE `takesprescriptions` (
   KEY `did` (`did`),
   CONSTRAINT `takesprescriptions_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
   CONSTRAINT `takesprescriptions_ibfk_2` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`) ON DELETE CASCADE,
-  CONSTRAINT `takesprescriptions_ibfk_3` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE
+  CONSTRAINT `takesprescriptions_ibfk_3` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE SET NULL
+  -- A doctor can be fired, but that shouldn't stop a patient from taking that medicine.
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
