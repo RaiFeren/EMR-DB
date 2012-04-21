@@ -18,6 +18,9 @@
 drop database if exists emr;
 create database emr;
 use emr;
+
+set autocommit=off;
+
 --
 -- Table structure for table `appointments`
 --
@@ -40,7 +43,7 @@ CREATE TABLE `appointments` (
   CONSTRAINT `appointments_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
   CONSTRAINT `appointments_ibfk_2` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE,
   CONSTRAINT `appointments_ibfk_3` FOREIGN KEY (`fid`) REFERENCES `facilities` (`fid`) ON DELETE CASCADE,
-  CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`) ON DELETE SET NULL 
+  CONSTRAINT `appointments_ibfk_4` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`) ON DELETE CASCADE 
   -- Can have unknown condition, thus change in conditions shouldn't stop an appointment.
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -80,7 +83,7 @@ CREATE TABLE `conditionstreats` (
 
 LOCK TABLES `conditionstreats` WRITE;
 /*!40000 ALTER TABLE `conditionstreats` DISABLE KEYS */;
-INSERT INTO `conditionstreats` VALUES (1,'Intestinal Obstruction','partial or complete',0.14,0),(2,'Food Poisoning','eating bad food',0.2,1),(3,'Pneumonia','fluid in the lungs',0.07,2),(4,'Ear Infection','infection of middle ear',0.3,2),(5,'Giardiasis','giardia is an amoeba',0.3,2),(6,'Pink Eye','eye infection',0.3,3),(7,'Myopia','nearsightedness',0.6,4),(8,'Arthritis','swelling of joints',0.3,5),(9,'Common Cold','virus',0.8,6),(10,'Influenza','common flu',0.5,6),(11,'Poison Ivy Rash','the plant',0.13,7),(12,'Strep Throat','Streptococcus',0.1,2),(13,'Kidney Infection','infection',0.04,2);
+INSERT INTO `conditionstreats` VALUES (1,'Intestinal Obstruction','partial or complete',0.14,1),(2,'Food Poisoning','eating bad food',0.2,2),(3,'Pneumonia','fluid in the lungs',0.07,3),(4,'Ear Infection','infection of middle ear',0.3,3),(5,'Giardiasis','giardia is an amoeba',0.3,3),(6,'Pink Eye','eye infection',0.3,4),(7,'Myopia','nearsightedness',0.6,5),(8,'Arthritis','swelling of joints',0.3,6),(9,'Common Cold','virus',0.8,7),(10,'Influenza','common flu',0.5,7),(11,'Poison Ivy Rash','the plant',0.13,8),(12,'Strep Throat','Streptococcus',0.1,3),(13,'Kidney Infection','infection',0.04,3);
 /*!40000 ALTER TABLE `conditionstreats` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -311,8 +314,8 @@ CREATE TABLE `takesprescriptions` (
   KEY `did` (`did`),
   CONSTRAINT `takesprescriptions_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
   CONSTRAINT `takesprescriptions_ibfk_2` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`) ON DELETE CASCADE,
-  CONSTRAINT `takesprescriptions_ibfk_3` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE SET NULL
-  -- A doctor can be fired, but that shouldn't stop a patient from taking that medicine.
+  CONSTRAINT `takesprescriptions_ibfk_3` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE
+  -- A doctor can be fired, but that shouldn't stop a patient from taking that medicine. 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -351,7 +354,7 @@ CREATE TABLE `treatments` (
 
 LOCK TABLES `treatments` WRITE;
 /*!40000 ALTER TABLE `treatments` DISABLE KEYS */;
-INSERT INTO `treatments` VALUES (0,'Hospital Visit',0,'You need medical attention at the hospital.','NULL',NULL,''),(1,'Drinking Fluids',0,'to replace lost electrolytes and flush your system','NULL',NULL,''),(2,'Antibiotics',30,'antibiotics will kill bacteria causing the infection','NULL',NULL,''),(3,'Eye Drops',25,'to be administered in the eye','NULL',NULL,''),(4,'Glasses',180,'get prescription glasses from your eye doctor','NULL',NULL,''),(5,'NSAID',15,'non-steroidal anti-inflammatory drugs','NULL',NULL,'thinning of blood'),(6,'Rest',0,'just rest','NULL',NULL,''),(7,'Corticosteroid',40,'only sometimes, usually goes away','NULL',NULL,'');
+INSERT INTO `treatments` VALUES (1,'Hospital Visit',0,'You need medical attention at the hospital.','NULL',NULL,''),(2,'Drinking Fluids',0,'to replace lost electrolytes and flush your system','NULL',NULL,''),(3,'Antibiotics',30,'antibiotics will kill bacteria causing the infection','NULL',NULL,''),(4,'Eye Drops',25,'to be administered in the eye','NULL',NULL,''),(5,'Glasses',180,'get prescription glasses from your eye doctor','NULL',NULL,''),(6,'NSAID',15,'non-steroidal anti-inflammatory drugs','NULL',NULL,'thinning of blood'),(7,'Rest',0,'just rest','NULL',NULL,''),(8,'Corticosteroid',40,'only sometimes, usually goes away','NULL',NULL,'');
 /*!40000 ALTER TABLE `treatments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -421,38 +424,33 @@ UNLOCK TABLES;
 create table error(msg CHAR(100) PRIMARY KEY);
 insert into error values("Cannot perform operations on Symptoms"), ("Condition and Symptoms must be changed simultaneously."), ("empty");
 
-delimiter |
-
 -- NO INSERT, UPDATE, DELETE ON SYMPTOMS TABLE
 create trigger reject_symptom_insert before insert on Symptoms
 for each row insert into error values("Cannot perform operations on Symptoms");
-|
 
 create trigger reject_symptom_delete before delete on Symptoms
 for each row insert into error values("Cannot perform operations on Symptoms");
-|
 
 create trigger reject_symptom_update before update on Symptoms
 for each row insert into error values("Cannot perform operations on Symptoms");
-|
 
 -- MAKE SURE IMPLIES TABLE IS COMPLETELY FILLED OUT (EACH CONDITION HAS CORRESPONDING SYMPTOMS) ON INSERT
 -- so clearly (num_symptoms)*(num_conditions) = (num_implies) will check the condition since the foreign key constraints prevent
 -- fake data
 
-CREATE PROCEDURE check_CST()
-update error
-set msg = IF((select count(*) from symptoms)*(select count(*) from conditionstreats) = (select count(*) from implies), "empty", "Condition and Symptoms must be changed simultaneously.")
-WHERE msg = "empty"|
+-- CREATE PROCEDURE check_CST()
+-- update error
+-- set msg = IF((select count(*) from symptoms)*(select count(*) from conditionstreats) = (select count(*) from implies), "empty", "Condition and Symptoms must be changed simultaneously.")
+-- WHERE msg = "empty";
 
-create trigger cond_symp_1 before insert on ConditionsTreats
-for each row call check_CST() |
+-- create trigger cond_symp_1 after insert on ConditionsTreats
+-- for each row call check_CST();
 
-create trigger cond_symp_2 before insert on Implies
-for each row call check_CST() |
+-- create trigger cond_symp_2 after insert on Implies
+-- for each row call check_CST();
 
-create trigger cond_symp_3 before delete on Implies
-for each row call check_CST() |
+-- create trigger cond_symp_3 after delete on Implies
+-- for each row call check_CST();
 
 -- UPDATE 
 
@@ -474,4 +472,16 @@ for each row call check_CST() |
 --        END;
 -- |
 
-delimiter ;
+
+-- CREATE INDEXES (see google doc)
+CREATE INDEX takesprescriptions_pid ON TakesPrescriptions(pid) USING HASH;
+CREATE INDEX appointments_pid ON Appointments(pid) USING HASH;
+CREATE INDEX appointments_did ON Appointments(did) USING HASH;
+CREATE INDEX appointments_aid ON Appointments(aid) USING HASH;
+CREATE INDEX symptomlist_sid ON SymptomList(sid) USING HASH;
+CREATE INDEX implies_cid ON Implies(cid) USING HASH;
+CREATE INDEX worksin_did ON WorksIn(did) USING HASH;
+CREATE INDEX knows_tid ON Knows(tid) USING HASH;
+
+commit;
+set autocommit=on;

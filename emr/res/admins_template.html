@@ -128,7 +128,7 @@ function checkDoctorForm(){
 function checkNewSelected(){
 	var treatments = document.getElementById("treat_select")
 	var chosenoption = treatments.options[treatments.selectedIndex]
-	if (chosenoption.value != "new"){
+	if (chosenoption.value != "0"){
 		// hide optional
 		document.getElementById('new_treatment').style.display = 'none';
 	} else {

@@ -196,7 +196,6 @@ public class PatientServlet extends HttpServlet {
 
 			// add appointment
 			java.sql.Date date = (java.sql.Date) DB.executeQuery("SELECT DATE_ADD(CURRENT_DATE, INTERVAL " + (int)(42*Math.random()) + " DAY)", 1).get(0).get(0);
-			out.println(date);
 			DB.executeUpdate("INSERT INTO Appointments VALUES("+aid+", "+patientID+", "+did+", "+fid+", " + maxCondition + ", \"" + date + "\");");
 
 			// add prescripton based on treatment
@@ -236,29 +235,30 @@ public class PatientServlet extends HttpServlet {
 					break;
 				apptID = -1;
 			}
+
 			// make sure an appointment was selected
-			if (apptID != -1)
+			if (apptID != -1){
 				DB.executeUpdate("DELETE FROM Appointments WHERE aid = " + apptID + ";");
+			} else {
+				// not an appointment - must be a prescription
+				int tid = -1, did = -1;
 
+				// get all prescriptions
+				ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT P.tid, P.did FROM TakesPrescriptions P WHERE P.pid = " + patientID + ";", 2);
 
-			// not an appointment - must be a prescription
-			int tid = -1, did = -1;
+				// check all buttons with ids "remove_i", where i is tid + "|" + did
+				for (int i = 0; i < prescriptions.size(); i++){
+					tid = (Integer) prescriptions.get(i).get(0);
+					did = (Integer) prescriptions.get(i).get(1);
+					if (request.getParameter("remove_" + tid + "|" + did) != null)
+						break;
+					tid = -1;
+				}
 
-			// get all prescriptions
-			ArrayList<ArrayList<Object>> prescriptions = DB.executeQuery("SELECT P.tid, P.did FROM TakesPrescriptions P WHERE P.pid = " + patientID + ";", 2);
-
-			// check all buttons with ids "remove_i", where i is tid + "|" + did
-			for (int i = 0; i < prescriptions.size(); i++){
-				tid = (Integer) prescriptions.get(i).get(0);
-				did = (Integer) prescriptions.get(i).get(1);
-				if (request.getParameter("remove_" + tid + "|" + did) != null)
-					break;
-				tid = -1;
+				// remove at most one prescription if one was selected (some may be identical, in which case it doesn't matter which is removed)
+				if (tid != -1)
+					DB.executeUpdate("DELETE FROM TakesPrescriptions WHERE pid = " + patientID + " and tid = " + tid + " and did = " + did + " LIMIT 1;");
 			}
-
-			// remove at most one prescription if one was selected (some may be identical, in which case it doesn't matter which is removed)
-			if (tid != -1)
-				DB.executeUpdate("DELETE FROM TakesPrescriptions WHERE pid = " + patientID + " and tid = " + tid + " and did = " + did + " LIMIT 1;");
 
 			DB.endTransaction();
 			out.println(generate_patient_page(patientID));
