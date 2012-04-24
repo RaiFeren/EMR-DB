@@ -474,14 +474,16 @@ for each row insert into error values("Cannot perform operations on Symptoms");
 
 
 -- CREATE INDEXES (see google doc)
+CREATE INDEX patients ON Patients(pid,name) USING BTREE;
+CREATE INDEX doctors ON Doctors(did,name) USING BTREE;
 CREATE INDEX takesprescriptions_pid ON TakesPrescriptions(pid) USING HASH;
 CREATE INDEX appointments_pid ON Appointments(pid) USING HASH;
 CREATE INDEX appointments_did ON Appointments(did) USING HASH;
 CREATE INDEX appointments_aid ON Appointments(aid) USING HASH;
 CREATE INDEX symptomlist_sid ON SymptomList(sid) USING HASH;
-CREATE INDEX implies_cid ON Implies(cid) USING HASH;
-CREATE INDEX worksin_did ON WorksIn(did) USING HASH;
-CREATE INDEX knows_tid ON Knows(tid) USING HASH;
+CREATE INDEX implies_cid ON Implies(cid,sid) USING BTREE;
+CREATE INDEX worksin_did ON WorksIn(did,fid) USING BTREE;
+CREATE INDEX knows_tid ON Knows(tid,did) USING BTREE;
 
 commit;
 set autocommit=on;
