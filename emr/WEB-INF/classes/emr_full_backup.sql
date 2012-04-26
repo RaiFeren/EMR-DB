@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.20, for Win32 (x86)
---
--- Host: localhost    Database: emr
--- ------------------------------------------------------
--- Server version	5.5.20
+-- Paul McCormack and Rai Feren
+-- 010186829 - PO and 40152662 - HMC
+-- SQL script for EMR program
+-- CS 133 Final Project, Due 5/1/2012
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -315,7 +315,6 @@ CREATE TABLE `takesprescriptions` (
   CONSTRAINT `takesprescriptions_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `patients` (`pid`) ON DELETE CASCADE,
   CONSTRAINT `takesprescriptions_ibfk_2` FOREIGN KEY (`tid`) REFERENCES `treatments` (`tid`) ON DELETE CASCADE,
   CONSTRAINT `takesprescriptions_ibfk_3` FOREIGN KEY (`did`) REFERENCES `doctors` (`did`) ON DELETE CASCADE
-  -- A doctor can be fired, but that shouldn't stop a patient from taking that medicine. 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -480,8 +479,8 @@ CREATE INDEX takesprescriptions_pid ON TakesPrescriptions(pid) USING HASH;
 CREATE INDEX appointments_pid ON Appointments(pid) USING HASH;
 CREATE INDEX appointments_did ON Appointments(did) USING HASH;
 CREATE INDEX appointments_aid ON Appointments(aid) USING HASH;
-CREATE INDEX symptomlist_sid ON SymptomList(sid) USING HASH;
-CREATE INDEX implies_cid ON Implies(cid,sid) USING BTREE;
+CREATE INDEX symptomlist_aid ON SymptomList(aid) USING HASH;
+CREATE INDEX implies_cid ON Implies(cid,sid, probability) USING BTREE;
 CREATE INDEX worksin_did ON WorksIn(did,fid) USING BTREE;
 CREATE INDEX knows_tid ON Knows(tid,did) USING BTREE;
 

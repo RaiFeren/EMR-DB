@@ -1,8 +1,10 @@
-/* Paul McCormack
- * 010186829 - PO
- * CS 133 PS 6
- * 2/29/2012
- */
+// Paul McCormack and Rai Feren
+// 010186829 - PO and 40152662 - HMC
+// CS 133 Final Project, Due 5/1/2012
+
+// The patient portal allows patients to see their appointments and
+// prescriptions and also to make new appointments by symptoms.
+// The logic will diagnose a probable condition from probability.
 
 // Invoke it like this: http://localhost:8080/emr/patients
 
@@ -15,7 +17,8 @@ import java.util.ArrayList;
 // displays page and performs various requests about electronics products
 public class PatientServlet extends HttpServlet {
 
-	// main page (not template page) for patient portal
+	// main page and template page for patient portal
+	// main page gives login page
 	public static final String PATIENT_TEMPLATE = "../webapps/emr/res/patient_template.html";
 	public static final String PATIENT_MAIN = "../webapps/emr/res/patients.html";
 

@@ -1,8 +1,11 @@
-/* Paul McCormack
- * 010186829 - PO
- * CS 133 PS 6
- * 2/29/2012
- */
+// Paul McCormack and Rai Feren
+// 010186829 - PO and 40152662 - HMC
+// CS 133 Final Project, Due 5/1/2012
+
+// The doctor portal allows doctors, after logging in with an id
+// to see their scheduled appointments and to update various
+// personal information like locations they work in and
+// treatments they know.
 
 // Invoke it like this: http://localhost:8080/emr/doctors
 
@@ -15,7 +18,7 @@ import java.util.ArrayList;
 // displays page and performs various requests about electronics products
 public class DoctorServlet extends HttpServlet {
 
-	// main page (not template page) for patient portal
+	// main page and template page for doctor portal
 	public static final String DOCTOR_TEMPLATE = "../webapps/emr/res/doctor_template.html";
 	public static final String DOCTOR_MAIN = "../webapps/emr/res/doctors.html";
 
@@ -118,6 +121,7 @@ public class DoctorServlet extends HttpServlet {
 		}
 	}
 
+	// generate a doctor's home page
 	private String generate_doctor_page(int doctorID) throws IOException {
 
         String html = readFileAsString(DOCTOR_TEMPLATE);

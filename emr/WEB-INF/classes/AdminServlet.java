@@ -1,10 +1,11 @@
-/* Paul McCormack
- * 010186829 - PO
- * CS 133 PS 6
- * 2/29/2012
- */
+// Paul McCormack and Rai Feren
+// 010186829 - PO and 40152662 - HMC
+// CS 133 Final Project, Due 5/1/2012
 
-// Invoke it like this: http://localhost:8080/emr/doctors
+// The administrator portal allows administrators to
+// add doctors, facilities, conditions, and treatments.
+
+// Invoke it like this: http://localhost:8080/emr/admins
 
 import java.io.*;
 import javax.servlet.*;
@@ -15,7 +16,7 @@ import java.util.ArrayList;
 // displays page and performs various requests about electronics products
 public class AdminServlet extends HttpServlet {
 
-	// main page (not template page) for patient portal
+	// main page for admin portal
 	public static final String ADMIN_TEMPLATE = "../webapps/emr/res/admins_template.html";
 
 	// respond to a GET request by just writing the page to the output
@@ -186,17 +187,6 @@ public class AdminServlet extends HttpServlet {
 
 		return html;
     }
-
-    /* OLD ADD TREATMENT SECTION
-    for (int i = 0; i < cond_id.length; i++) {
-				treatsConditionsList += String.format("<td> <input type=\"checkbox\" name=\"cond_%d\"> %s </td>", cond_id[i], condName[i]);
-				if (i > 0 && i < cond_id.length - 1 && i % 4 == 3)
-					treatsConditionsList += "</tr>\n<tr>";
-			}
-		treatsConditionsList += "</tr>";
-		html = html.replace("%CONDITION_LIST%", treatsConditionsList);
-		*/
-
 
 
 	// read a file as a string

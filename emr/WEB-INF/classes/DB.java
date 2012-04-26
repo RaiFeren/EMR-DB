@@ -1,9 +1,10 @@
-/* Paul McCormack
- * 010186829 - PO
- * CS 133 PS 6
- * 2/29/2012
- */
- // from store example in class
+// Paul McCormack and Rai Feren
+// 010186829 - PO and 40152662 - HMC
+// CS 133 Final Project, Due 5/1/2012
+// DB.java manages the database connection and
+//   facilitates transaction management and
+//   query processing
+
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -51,7 +52,7 @@ public class DB {
 	}
 
 
-    // execute a query, which returns the result set
+    // execute a query, which returns the result set in a nested arraylist
 	public static ArrayList<ArrayList<Object>> executeQuery(String query, int num_cols) {
 		// if not currently in a transaction, just run the single query
 		boolean singleStatement = !inTransaction;
