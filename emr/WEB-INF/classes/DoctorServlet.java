@@ -71,7 +71,7 @@ public class DoctorServlet extends HttpServlet {
 			}
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
@@ -117,7 +117,7 @@ public class DoctorServlet extends HttpServlet {
 			out.println(generate_doctor_page(doctorID).replace("<div id=\"changes_made\" style=\"display: none;\">", "<div id=\"changes_made\" style=\"display: block;\">"));
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 

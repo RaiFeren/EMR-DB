@@ -77,7 +77,7 @@ public class PatientServlet extends HttpServlet {
 			}
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
@@ -116,7 +116,7 @@ public class PatientServlet extends HttpServlet {
 			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
@@ -212,7 +212,7 @@ public class PatientServlet extends HttpServlet {
 			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 			tries++;
 			if (tries < 3)
 				createAppointment(request,out);
@@ -267,7 +267,7 @@ public class PatientServlet extends HttpServlet {
 			out.println(generate_patient_page(patientID));
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 

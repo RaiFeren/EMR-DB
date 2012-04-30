@@ -100,7 +100,7 @@ public class AdminServlet extends HttpServlet {
 			out.println(generate_admin_page());
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
@@ -153,7 +153,7 @@ public class AdminServlet extends HttpServlet {
 			out.println(adminPage);
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
 	}
 
