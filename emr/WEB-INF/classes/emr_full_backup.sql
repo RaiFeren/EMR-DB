@@ -153,6 +153,7 @@ CREATE TABLE `implies` (
   `probability` double DEFAULT NULL,
   KEY `sid` (`sid`),
   KEY `cid` (`cid`),
+  CONSTRAINT `pri_key_sidcid` PRIMARY KEY (`sid`, `cid`),
   CONSTRAINT `implies_ibfk_1` FOREIGN KEY (`sid`) REFERENCES `symptoms` (`sid`) ON DELETE CASCADE,
   CONSTRAINT `implies_ibfk_2` FOREIGN KEY (`cid`) REFERENCES `conditionstreats` (`cid`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
