@@ -113,6 +113,7 @@ public class PatientServlet extends HttpServlet {
 			DB.executeUpdate("INSERT INTO Uses VALUES(" + patientID + ", \"" + insurance + "\");");
 			DB.endTransaction();
 
+			out.println(generate_patient_page(patientID));
 
 
 		} catch (java.lang.Exception ex2){
