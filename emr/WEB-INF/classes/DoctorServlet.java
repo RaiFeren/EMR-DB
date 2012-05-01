@@ -61,6 +61,8 @@ public class DoctorServlet extends HttpServlet {
 			if (!result.isEmpty()){
 				out.println(generate_doctor_page(doctorID));
 			}
+			else
+				throw new Exception("");
 
 		} catch (java.lang.Exception ex2){
 			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
