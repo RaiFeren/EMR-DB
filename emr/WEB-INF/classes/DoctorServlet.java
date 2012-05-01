@@ -52,37 +52,35 @@ public class DoctorServlet extends HttpServlet {
 
 	// log in to a doctors's page
     public void doLogin(HttpServletRequest request, PrintWriter out){
-		try{
-			// get login ID
-			int doctorID = Integer.parseInt(request.getParameter("did"));
+		// get login ID
+		int doctorID = Integer.parseInt(request.getParameter("did"));
 
+		try{
 			// get records from database or else reject input
 			ArrayList<ArrayList<Object>> result = DB.executeQuery("SELECT name FROM Doctors WHERE did=" + doctorID + ";", 1);
-			if (result.isEmpty()){
-				// send the DOCTOR_MAIN page back
-				String errorPage = readFileAsString(DOCTOR_MAIN);
-				errorPage = errorPage.replace("<div id=\"bad_id\" style=\"display: none;\">", "<div id=\"bad_id\" style=\"display: block;\">");
-				errorPage = errorPage.replace("%BAD_ID%", doctorID + "");
-				out.println(errorPage);
-				return;
-			}
-			else{
+			if (!result.isEmpty()){
 				out.println(generate_doctor_page(doctorID));
 			}
 
 		} catch (java.lang.Exception ex2){
 			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			// send the DOCTOR_MAIN page back
+			String errorPage = readFileAsString(DOCTOR_MAIN);
+			errorPage = errorPage.replace("<div id=\"bad_id\" style=\"display: none;\">", "<div id=\"bad_id\" style=\"display: block;\">");
+			errorPage = errorPage.replace("%BAD_ID%", doctorID + "");
+			out.println(errorPage);
+			return;
 		}
+
 	}
 
 	// update list of treatments known and available locations
 	public void updateTreatmentsKnown(HttpServletRequest request, PrintWriter out){
+		// get doctor ID from hidden field
+		int doctorID = Integer.parseInt(request.getParameter("did"));
 		try{
 			// begin a transaction
 			DB.beginTransaction();
-
-			// get doctor ID from hidden field
-			int doctorID = Integer.parseInt(request.getParameter("did"));
 
 			// get list of all fid to determine which are checked
 			ArrayList<ArrayList<Object>> fids = DB.executeQuery("SELECT F.fid FROM Facilities F;", 1);
@@ -115,22 +113,24 @@ public class DoctorServlet extends HttpServlet {
 
 			// make hidden divider appear in output to confirm changes made
 			out.println(generate_doctor_page(doctorID).replace("<div id=\"changes_made\" style=\"display: none;\">", "<div id=\"changes_made\" style=\"display: block;\">"));
+			return;
 
 		} catch (java.lang.Exception ex2){
 			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
+		// make hidden divider appear in output to confirm changes made
+		out.println(generate_doctor_page(doctorID));
 	}
 
 	// generate a doctor's home page
-	private String generate_doctor_page(int doctorID) throws IOException {
+	private String generate_doctor_page(int doctorID) {
+		String html = readFileAsString(DOCTOR_TEMPLATE);
+		String appointmentRows = "";
+		String allLocationRows = "";
+		String locationDividers = "";
+		String treatmentsKnown = "<tr>";
 
-        String html = readFileAsString(DOCTOR_TEMPLATE);
-        String appointmentRows = "";
-        String allLocationRows = "";
-        String locationDividers = "";
-        String treatmentsKnown = "<tr>";
-
-        // begin a transaction
+		// begin a transaction
 		DB.beginTransaction();
 
 		// get patient name
@@ -174,9 +174,9 @@ public class DoctorServlet extends HttpServlet {
 			locationAvailable.add((Integer) worksAt.get(i).get(0));
 
 		// print check boxes for working rows
-        for (int i = 0; i < facilityAddrs.size(); i++){
+		for (int i = 0; i < facilityAddrs.size(); i++){
 			Integer fid = (Integer) facilityAddrs.get(i).get(0);
-            allLocationRows += String.format("<tr><td> <input type=\"checkbox\" name=\"loc_%d\" %s> %s </td> </tr>\n", fid, locationAvailable.contains(fid) ? "checked" : "", facilityAddrs.get(i).get(1));
+			allLocationRows += String.format("<tr><td> <input type=\"checkbox\" name=\"loc_%d\" %s> %s </td> </tr>\n", fid, locationAvailable.contains(fid) ? "checked" : "", facilityAddrs.get(i).get(1));
 		}
 
 
@@ -189,25 +189,25 @@ public class DoctorServlet extends HttpServlet {
 			treatmentKnown.add((Integer) knows.get(i).get(0));
 
 
-        for (int i = 0; i < treatments.size(); i++) {
+		for (int i = 0; i < treatments.size(); i++) {
 			Integer tid = (Integer) treatments.get(i).get(0);
-            treatmentsKnown += String.format("\t<td> <input type=\"checkbox\" name=\"treat_%d\" %s> %s </td>", tid, treatmentKnown.contains(tid) ? "checked": "", treatments.get(i).get(1));
-            if (i > 0 && i < treatments.size() - 1 && i % 4 == 3)
-                treatmentsKnown += "</tr>\n<tr>";
-        }
-        treatmentsKnown += "</tr>";
+			treatmentsKnown += String.format("\t<td> <input type=\"checkbox\" name=\"treat_%d\" %s> %s </td>", tid, treatmentKnown.contains(tid) ? "checked": "", treatments.get(i).get(1));
+			if (i > 0 && i < treatments.size() - 1 && i % 4 == 3)
+				treatmentsKnown += "</tr>\n<tr>";
+		}
+		treatmentsKnown += "</tr>";
 
-        // end transaction
+		// end transaction
 		DB.endTransaction();
 
-        html = html.replace("%DOCTOR_ID%", doctorID + "");
-        html = html.replace("%DOCTOR_NAME%", doctorName);
-        html = html.replace("%APPOINTMENT_ROWS%", appointmentRows);
-        html = html.replace("%LOCATION_DIVIDERS%", locationDividers);
-        html = html.replace("%AVAILABLE_LOCATIONS%", allLocationRows);
-        html = html.replace("%TREATMENTS_KNOWN%", treatmentsKnown);
+		html = html.replace("%DOCTOR_ID%", doctorID + "");
+		html = html.replace("%DOCTOR_NAME%", doctorName);
+		html = html.replace("%APPOINTMENT_ROWS%", appointmentRows);
+		html = html.replace("%LOCATION_DIVIDERS%", locationDividers);
+		html = html.replace("%AVAILABLE_LOCATIONS%", allLocationRows);
+		html = html.replace("%TREATMENTS_KNOWN%", treatmentsKnown);
 
-        return html;
+		return html;
     }
 
 

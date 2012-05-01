@@ -97,11 +97,12 @@ public class AdminServlet extends HttpServlet {
 			}
 
 			DB.endTransaction();
-			out.println(generate_admin_page());
+
 
 		} catch (java.lang.Exception ex2){
 			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
+		out.println(generate_admin_page());
 	}
 
 	// add a facility
@@ -122,11 +123,12 @@ public class AdminServlet extends HttpServlet {
 			DB.executeUpdate("INSERT INTO Facilities VALUES(" + facilityID + ", \"" + name + "\", \"" + addr1  + "\", \"" + addr2 + "\");");
 			DB.endTransaction();
 
-			out.println(generate_admin_page());
+
 
 		} catch (java.lang.Exception ex2){
-			out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
+			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
+		out.println(generate_admin_page());
 	}
 
 	// add a doctor
@@ -150,16 +152,17 @@ public class AdminServlet extends HttpServlet {
 			adminPage = adminPage.replace("doctor_success\" style=\"display: none", "doctor_success\" style=\"display: block");
 			adminPage = adminPage.replace("%DOCTOR_NAME%", name + "");
 			adminPage = adminPage.replace("%DOCTOR_ID%", did + "");
-			out.println(adminPage);
+
 
 		} catch (java.lang.Exception ex2){
 			//out.println("<h2> Exception: </h2> <p>"+ ex2.getMessage() +"</p> <br>");
 		}
+		out.println(generate_admin_page());
 	}
 
 
 	// generate admin web page to return
-	public String generate_admin_page() throws IOException {
+	public String generate_admin_page() {
 
 		String html = readFileAsString(ADMIN_TEMPLATE);
 		String symptomProbabilities = "";
